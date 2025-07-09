@@ -8,7 +8,7 @@ import re
 import shutil
 import urllib.parse
 import webbrowser
-from contextlib import AsyncExitStack, asynccontextmanager
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import List, Optional, Union, cast
 
@@ -1090,16 +1090,8 @@ async def connect_mcp(
     payload: ConnectMCPRequest,
     current_user: UserParam,
 ):
-    from mcp import ClientSession
-    from mcp.client.sse import sse_client
-    from mcp.client.stdio import (
-        StdioServerParameters,
-        get_default_environment,
-        stdio_client,
-    )
-
     from chainlit.context import init_ws_context
-    from chainlit.mcp import SseMcpConnection, StdioMcpConnection, validate_mcp_command
+    from chainlit.mcp import validate_mcp_command
     from chainlit.session import WebsocketSession
 
     session = WebsocketSession.get_by_id(payload.sessionId)
@@ -1115,98 +1107,62 @@ async def connect_mcp(
             )
 
     mcp_enabled = config.code.on_mcp_connect is not None
-    if mcp_enabled:
-        if payload.name in session.mcp_sessions:
-            old_client_session, old_exit_stack = session.mcp_sessions[payload.name]
-            if on_mcp_disconnect := config.code.on_mcp_disconnect:
-                await on_mcp_disconnect(payload.name, old_client_session)
-            try:
-                await old_exit_stack.aclose()
-            except Exception:
-                pass
-
-        try:
-            exit_stack = AsyncExitStack()
-
-            if payload.clientType == "sse":
-                if not config.features.mcp.sse.enabled:
-                    raise HTTPException(
-                        status_code=400,
-                        detail="SSE MCP is not enabled",
-                    )
-
-                mcp_connection = SseMcpConnection(url=payload.url, name=payload.name)  # type: SseMcpConnection
-
-                transport = await exit_stack.enter_async_context(
-                    sse_client(url=mcp_connection.url)
-                )
-            elif payload.clientType == "stdio":
-                if not config.features.mcp.stdio.enabled:
-                    raise HTTPException(
-                        status_code=400,
-                        detail="Stdio MCP is not enabled",
-                    )
-
-                env_from_cmd, command, args = validate_mcp_command(payload.fullCommand)
-                mcp_connection = StdioMcpConnection(  # type: ignore[no-redef]
-                    command=command, args=args, name=payload.name
-                )  # type: StdioMcpConnection
-
-                env = get_default_environment()
-                env.update(env_from_cmd)
-                # Create the server parameters
-                server_params = StdioServerParameters(
-                    command=command,
-                    args=args,
-                    env=env,
-                )
-
-                transport = await exit_stack.enter_async_context(
-                    stdio_client(server_params)
-                )
-
-            read, write = transport
-
-            mcp_session: ClientSession = await exit_stack.enter_async_context(
-                ClientSession(
-                    read_stream=read, write_stream=write, sampling_callback=None
-                )
-            )
-
-            # Initialize the session
-            await mcp_session.initialize()
-
-            # Store the session
-            session.mcp_sessions[mcp_connection.name] = (mcp_session, exit_stack)
-
-            # Call the callback
-            await config.code.on_mcp_connect(mcp_connection, mcp_session)
-
-        except Exception as e:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Could not connect to the MCP: {e!s}",
-            )
-    else:
+    if not mcp_enabled:
         raise HTTPException(
             status_code=400,
             detail="This app does not support MCP.",
         )
 
-    tool_list = await mcp_session.list_tools()
+    # Extract MCP parameters from request
+    mcp_params = {
+        "name": payload.name,
+        "clientType": payload.clientType,
+    }
 
+    # Add client-specific parameters
+    if payload.clientType == "sse":
+        if not config.features.mcp.sse.enabled:
+            raise HTTPException(
+                status_code=400,
+                detail="SSE MCP is not enabled",
+            )
+        mcp_params["url"] = payload.url
+    elif payload.clientType == "stdio":
+        if not config.features.mcp.stdio.enabled:
+            raise HTTPException(
+                status_code=400,
+                detail="Stdio MCP is not enabled",
+            )
+        try:
+            env_from_cmd, command, args = validate_mcp_command(payload.fullCommand)
+            mcp_params.update(
+                {
+                    "command": command,
+                    "args": args,
+                    "env": env_from_cmd,
+                    "fullCommand": payload.fullCommand,
+                }
+            )
+        except ValueError as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid command: {e}",
+            )
+
+    # Call user callback with parameters instead of real session
+    try:
+        await config.code.on_mcp_connect(mcp_params)
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"MCP connection callback failed: {e!s}",
+        )
+
+    # Return success - UI updates are now handled by cl.mcp_status_update()
     return JSONResponse(
         content={
             "success": True,
-            "mcp": {
-                "name": payload.name,
-                "tools": [{"name": t.name} for t in tool_list.tools],
-                "clientType": payload.clientType,
-                "command": payload.fullCommand
-                if payload.clientType == "stdio"
-                else None,
-                "url": payload.url if payload.clientType == "sse" else None,
-            },
+            "message": "MCP connection request processed. UI updates handled by callback.",
         }
     )
 
@@ -1232,23 +1188,63 @@ async def disconnect_mcp(
             )
 
     callback = config.code.on_mcp_disconnect
-    if payload.name in session.mcp_sessions:
+    if callback:
+        # Prepare MCP parameters for disconnect callback
+        mcp_params = {
+            "name": payload.name,
+        }
+
         try:
-            client_session, exit_stack = session.mcp_sessions[payload.name]
-            if callback:
-                await callback(payload.name, client_session)
-
-            try:
-                await exit_stack.aclose()
-            except Exception:
-                pass
-            del session.mcp_sessions[payload.name]
-
+            await callback(mcp_params)
         except Exception as e:
             raise HTTPException(
                 status_code=400,
-                detail=f"Could not disconnect to the MCP: {e!s}",
+                detail=f"MCP disconnect callback failed: {e!s}",
             )
+
+    # Return success - UI updates are now handled by cl.mcp_status_update()
+    return JSONResponse(
+        content={
+            "success": True,
+            "message": "MCP disconnection request processed. UI updates handled by callback.",
+        }
+    )
+
+
+@router.post("/mcp/direct-update")
+async def direct_update_mcp(
+    payload: dict,
+    current_user: UserParam,
+):
+    """Directly update frontend MCP state without actual connections"""
+    from chainlit.context import init_ws_context
+    from chainlit.session import WebsocketSession
+
+    session_id = payload.get("sessionId")
+    if not session_id:
+        raise HTTPException(status_code=400, detail="sessionId is required")
+
+    session = WebsocketSession.get_by_id(session_id)
+    context = init_ws_context(session)
+
+    if current_user:
+        if (
+            not context.session.user
+            or context.session.user.identifier != current_user.identifier
+        ):
+            raise HTTPException(
+                status_code=401,
+                detail="Unauthorized",
+            )
+
+    # Emit directly to frontend via WebSocket
+    await context.emitter.emit(
+        "mcp_direct_update",
+        {
+            "action": payload.get("action", "add"),  # add, remove, update
+            "mcp": payload.get("mcp", {}),
+        },
+    )
 
     return JSONResponse(content={"success": True})
 

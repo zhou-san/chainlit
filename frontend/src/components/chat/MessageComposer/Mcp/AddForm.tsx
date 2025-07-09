@@ -115,7 +115,7 @@ export const McpAddForm = ({
             </Label>
             <Input
               id="server-name"
-              placeholder="Example: Stripe"
+              placeholder="Example: aki_mcp"
               className="w-full bg-background text-foreground border-input"
               value={serverName}
               onChange={(e) => setServerName(e.target.value)}
@@ -161,7 +161,7 @@ export const McpAddForm = ({
             placeholder={
               serverType === 'sse'
                 ? 'Example: http://localhost:5000'
-                : 'Example: npx -y @stripe/mcp --tools=all --api-key=YOUR_STRIPE_SECRET_KEY'
+                : 'Example: amzn-mcp --include-tools "read_internal_websites"'
             }
             className="w-full bg-background text-foreground border-input"
             value={serverType === 'sse' ? serverUrl : serverCommand}

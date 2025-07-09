@@ -445,6 +445,34 @@ const useChatSession = () => {
             break;
         }
       });
+
+      socket.on('mcp_direct_update', (data: { action: string; mcp: any }) => {
+        const { action, mcp } = data;
+
+        switch (action) {
+          case 'add':
+            // Smart add: if MCP with same name exists, update it; otherwise add new
+            setMcps((prev) => {
+              const existingIndex = prev.findIndex((m) => m.name === mcp.name);
+              if (existingIndex !== -1) {
+                // Update existing MCP
+                return prev.map((m, index) =>
+                  index === existingIndex ? { ...m, ...mcp } : m
+                );
+              } else {
+                // Add new MCP
+                return [...prev, mcp];
+              }
+            });
+            break;
+          case 'remove':
+            setMcps((prev) => prev.filter((m) => m.name !== mcp.name));
+            break;
+          case 'clear':
+            setMcps([]);
+            break;
+        }
+      });
     },
     [setSession, sessionId, idToResume, chatProfile]
   );
