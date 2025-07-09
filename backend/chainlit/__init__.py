@@ -104,6 +104,46 @@ def sleep(duration: int):
     return asyncio.sleep(duration)
 
 
+async def mcp_status_update(action: str, mcp: Dict[str, Any]):
+    """
+    Update the frontend MCP status display without actual MCP connections.
+    This allows you to control what MCP connections are shown in the UI.
+
+    Args:
+        action (str): Action to perform - 'add', 'remove', 'update', or 'clear'
+        mcp (Dict[str, Any]): MCP configuration dict with keys:
+            - name (str): MCP connection name (required for all actions except 'clear')
+            - status (str): Connection status ('connected', 'connecting', 'failed')
+            - clientType (str): 'stdio' or 'sse'
+            - command (str, optional): Command for stdio type
+            - url (str, optional): URL for sse type
+            - tools (List[Dict], optional): List of tool objects with 'name' key
+
+    Actions:
+        - 'add': if MCP with same name exists, updates it; otherwise adds new
+        - 'remove': Remove MCP by name
+        - 'clear': Remove all MCPs (mcp dict can be empty)
+
+    Example:
+        # Smart add/update (recommended) - handles duplicates automatically
+        await cl.mcp_status_update('add', {
+            'name': 'Weather MCP',
+            'status': 'connected',
+            'clientType': 'stdio',
+            'command': 'npx weather-mcp',
+            'tools': [{'name': 'get_weather'}, {'name': 'get_forecast'}]
+        })
+
+        # Remove specific MCP
+        await cl.mcp_status_update('remove', {'name': 'Weather MCP'})
+
+        # Clear all MCPs
+        await cl.mcp_status_update('clear', {})
+
+    """
+    await context.emitter.emit("mcp_direct_update", {"action": action, "mcp": mcp})
+
+
 @dataclass()
 class CopilotFunction:
     name: str
@@ -174,6 +214,7 @@ __all__ = [
     "instrument_mistralai",
     "instrument_openai",
     "make_async",
+    "mcp_status_update",
     "oauth_callback",
     "on_app_shutdown",
     "on_app_startup",

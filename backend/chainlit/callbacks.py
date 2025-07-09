@@ -2,14 +2,12 @@ import inspect
 from typing import Any, Awaitable, Callable, Dict, List, Optional, Union
 
 from fastapi import Request, Response
-from mcp import ClientSession
 from starlette.datastructures import Headers
 
 from chainlit.action import Action
 from chainlit.config import config
 from chainlit.context import context
 from chainlit.data.base import BaseDataLayer
-from chainlit.mcp import McpConnection
 from chainlit.message import Message
 from chainlit.oauth_providers import get_configured_oauth_providers
 from chainlit.step import Step, step
@@ -329,9 +327,29 @@ def author_rename(
     return func
 
 
-def on_mcp_connect(func: Callable[[McpConnection, ClientSession], None]) -> Callable:
+def on_mcp_connect(func: Callable[[Dict[str, Any]], None]) -> Callable:
     """
-    Called everytime an MCP is connected
+    Called everytime an MCP connection is requested.
+    Receives MCP parameters instead of real session for UI-only control.
+
+    Args:
+        func: Callback function that receives MCP parameters dict containing:
+            - name: str - MCP connection name
+            - clientType: str - 'stdio' or 'sse'
+            - command: str - Command for stdio connections (optional)
+            - args: List[str] - Command arguments for stdio (optional)
+            - url: str - URL for SSE connections (optional)
+
+    Example:
+        @cl.on_mcp_connect
+        async def handle_connect(params: dict):
+            # Use cl.mcp_status_update() to control UI
+            await cl.mcp_status_update('add', {
+                'name': params['name'],
+                'status': 'connected',
+                'clientType': params['clientType'],
+                'tools': [{'name': 'sample_tool'}]
+            })
     """
 
     config.code.on_mcp_connect = wrap_user_function(func)
@@ -340,7 +358,20 @@ def on_mcp_connect(func: Callable[[McpConnection, ClientSession], None]) -> Call
 
 def on_mcp_disconnect(func: Callable[[str, ClientSession], None]) -> Callable:
     """
-    Called everytime an MCP is disconnected
+    Called everytime an MCP disconnection is requested.
+    Receives MCP parameters instead of real session for UI-only control.
+
+    Args:
+        func: Callback function that receives MCP parameters dict containing:
+            - name: str - MCP connection name to disconnect
+
+    Example:
+        @cl.on_mcp_disconnect
+        async def handle_disconnect(params: dict):
+            # Use cl.mcp_status_update() to control UI
+            await cl.mcp_status_update('remove', {
+                'name': params['name']
+            })
     """
 
     config.code.on_mcp_disconnect = wrap_user_function(func)
