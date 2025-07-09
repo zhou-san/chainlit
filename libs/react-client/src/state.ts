@@ -1,5 +1,5 @@
 import { isEqual } from 'lodash';
-import { AtomEffect, DefaultValue, atom, selector } from 'recoil';
+import { DefaultValue, atom, selector } from 'recoil';
 import { Socket } from 'socket.io-client';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -215,34 +215,7 @@ export const currentThreadIdState = atom<string | undefined>({
   default: undefined
 });
 
-const localStorageEffect =
-  <T>(key: string): AtomEffect<T> =>
-  ({ setSelf, onSet }) => {
-    // When the atom is first initialized, try to get its value from localStorage
-    const savedValue = localStorage.getItem(key);
-    if (savedValue != null) {
-      try {
-        setSelf(JSON.parse(savedValue));
-      } catch (error) {
-        console.error(
-          `Error parsing localStorage value for key "${key}":`,
-          error
-        );
-      }
-    }
-
-    // Subscribe to state changes and update localStorage
-    onSet((newValue, _, isReset) => {
-      if (isReset) {
-        localStorage.removeItem(key);
-      } else {
-        localStorage.setItem(key, JSON.stringify(newValue));
-      }
-    });
-  };
-
 export const mcpState = atom<IMcp[]>({
   key: 'Mcp',
-  default: [],
-  effects: [localStorageEffect<IMcp[]>('mcp_storage_key')]
+  default: []
 });
