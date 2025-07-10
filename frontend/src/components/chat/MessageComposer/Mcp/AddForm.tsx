@@ -161,7 +161,7 @@ export const McpAddForm = ({
             placeholder={
               serverType === 'sse'
                 ? 'Example: http://localhost:5000'
-                : 'Example: amzn-mcp --include-tools "read_quip"'
+                : 'Example: amzn-mcp --include-tools="read_quip"'
             }
             className="w-full bg-background text-foreground border-input"
             value={serverType === 'sse' ? serverUrl : serverCommand}
