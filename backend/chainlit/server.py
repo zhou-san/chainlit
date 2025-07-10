@@ -1326,21 +1326,24 @@ async def connect_mcp(
 
     # Call user callback with parameters instead of real session
     try:
-        if config.code.on_mcp_connect:
-                await config.code.on_mcp_connect(mcp_params)
+        result = await config.code.on_mcp_connect(mcp_params)
+
+        # Check if result indicates failure
+        if isinstance(result, dict) and result.get("success") is False:
+            raise HTTPException(
+                status_code=400,
+                detail=result.get("message", "MCP connection failed"),
+            )
+
+        return JSONResponse(content=result)
+    except HTTPException:
+        # Re-raise HTTPExceptions (including the one we create above)
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=400,
             detail=f"MCP connection callback failed: {e!s}",
         )
-
-    # Return success - UI updates are now handled by cl.mcp_status_update()
-    return JSONResponse(
-        content={
-            "success": True,
-            "message": "MCP connection request processed. UI updates handled by callback.",
-        }
-    )
 
 
 @router.delete("/mcp")
@@ -1371,7 +1374,19 @@ async def disconnect_mcp(
         }
 
         try:
-            await callback(mcp_params)
+            result = await callback(mcp_params)
+
+            # Check if result indicates failure
+            if isinstance(result, dict) and result.get("success") is False:
+                raise HTTPException(
+                    status_code=400,
+                    detail=result.get("message", "MCP disconnection failed"),
+                )
+
+            return JSONResponse(content=result)
+        except HTTPException:
+            # Re-raise HTTPExceptions (including the one we create above)
+            raise
         except Exception as e:
             raise HTTPException(
                 status_code=400,
@@ -1382,7 +1397,7 @@ async def disconnect_mcp(
     return JSONResponse(
         content={
             "success": True,
-            "message": "MCP disconnection request processed. UI updates handled by callback.",
+            "message": "MCP disconnection request processed.",
         }
     )
 
