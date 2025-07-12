@@ -54,7 +54,13 @@ def validate_mcp_command(command_string: str):
     for i, part in enumerate(parts):
         # Remove any path components to get the base executable name
         base_exec = part.split("/")[-1].split("\\")[-1]
-        if allowed_executables is None or base_exec in allowed_executables:
+        if allowed_executables is None:
+            # When no restrictions, accept first non-environment variable part
+            if "=" not in part:
+                executable = part
+                executable_index = i
+                break
+        elif base_exec in allowed_executables:
             executable = part
             executable_index = i
             break
