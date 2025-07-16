@@ -135,13 +135,13 @@ reaction_on_message_received = false
     sample_rate = 24000
 
 [features.mcp]
-    # Enable Model Context Protocol (MCP) features
     enabled = false
+    show_indicator = true  # Control visibility of the MCP connection indicator dot
 
 [features.mcp.sse]
     enabled = true
 
-[features.mcp.streamable-http]
+[features.mcp.streamable_http]
     enabled = true
 
 [features.mcp.stdio]
@@ -272,10 +272,12 @@ class McpSseFeature(BaseModel):
     enabled: bool = True
 
 
+@dataclass
 class McpStreamableHttpFeature(BaseModel):
     enabled: bool = True
 
 
+@dataclass
 class McpStdioFeature(BaseModel):
     enabled: bool = True
     allowed_executables: Optional[list[str]] = None
@@ -287,6 +289,7 @@ class SlackFeature(BaseModel):
 
 class McpFeature(BaseModel):
     enabled: bool = False
+    show_indicator: bool = True  # Add option to toggle MCP indicator visibility
     sse: McpSseFeature = Field(default_factory=McpSseFeature)
     streamable_http: McpStreamableHttpFeature = Field(
         default_factory=McpStreamableHttpFeature

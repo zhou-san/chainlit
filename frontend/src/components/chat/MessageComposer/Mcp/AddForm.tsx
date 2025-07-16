@@ -25,22 +25,24 @@ interface McpAddFormProps {
   onCancel: () => void;
   allowStdio?: boolean;
   allowSse?: boolean;
+  allowStreamableHttp?: boolean;
 }
 
 export const McpAddForm = ({
   onSuccess,
   onCancel,
   allowStdio,
-  allowSse
+  allowSse,
+  allowStreamableHttp
 }: McpAddFormProps) => {
   const apiClient = useContext(ChainlitContext);
   const sessionId = useRecoilValue(sessionIdState);
   const setMcps = useSetRecoilState(mcpState);
 
   const [serverName, setServerName] = useState('');
-  const [serverType, setServerType] = useState<'stdio' | 'sse'>(
-    allowStdio ? 'stdio' : 'sse'
-  );
+  const [serverType, setServerType] = useState<
+    'stdio' | 'sse' | 'streamable_http'
+  >(allowStdio ? 'stdio' : allowSse ? 'sse' : 'streamable_http');
   const [serverUrl, setServerUrl] = useState('');
   const [serverCommand, setServerCommand] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -51,9 +53,10 @@ export const McpAddForm = ({
 
     if (serverType === 'stdio') {
       return !!serverCommand.trim();
-    } else {
+    } else if (serverType === 'sse' || serverType === 'streamable_http') {
       return !!serverUrl.trim();
     }
+    return false;
   };
 
   const resetForm = () => {
@@ -84,10 +87,29 @@ export const McpAddForm = ({
           error: (err) => <span>{err.message}</span>
         }
       );
-    } else {
+    } else if (serverType === 'sse') {
       toast.promise(
         apiClient
           .connectSseMCP(sessionId, serverName, serverUrl)
+          .then(async ({ success, mcp }) => {
+            if (success && mcp) {
+              setMcps((prev) => [...prev, { ...mcp, status: 'connected' }]);
+            }
+            resetForm();
+            onSuccess();
+          })
+          .finally(() => setIsLoading(false)),
+        {
+          loading: 'Adding MCP...',
+          success: () => 'MCP added!',
+          error: (err) => <span>{err.message}</span>
+        }
+      );
+    } else {
+      // streamable_http
+      toast.promise(
+        apiClient
+          .connectStreamableHttpMCP(sessionId, serverName, serverUrl)
           .then(async ({ success, mcp }) => {
             if (success && mcp) {
               setMcps((prev) => [...prev, { ...mcp, status: 'connected' }]);
@@ -141,6 +163,11 @@ export const McpAddForm = ({
               </SelectTrigger>
               <SelectContent>
                 {allowSse ? <SelectItem value="sse">sse</SelectItem> : null}
+                {allowStreamableHttp ? (
+                  <SelectItem value="streamable_http">
+                    streamable_http
+                  </SelectItem>
+                ) : null}
                 {allowStdio ? (
                   <SelectItem value="stdio">stdio</SelectItem>
                 ) : null}
@@ -154,7 +181,7 @@ export const McpAddForm = ({
             htmlFor="server-endpoint"
             className="text-foreground/70 text-sm"
           >
-            {serverType === 'sse' ? 'Server URL *' : 'Command *'}
+            {serverType === 'stdio' ? 'Command *' : 'Server URL *'}
           </Label>
           <Input
             id="server-endpoint"
@@ -164,12 +191,12 @@ export const McpAddForm = ({
                 : 'Example: amzn-mcp --include-tools="read_quip"'
             }
             className="w-full bg-background text-foreground border-input"
-            value={serverType === 'sse' ? serverUrl : serverCommand}
+            value={serverType === 'stdio' ? serverCommand : serverUrl}
             onChange={(e) => {
-              if (serverType === 'sse') {
-                setServerUrl(e.target.value);
-              } else {
+              if (serverType === 'stdio') {
                 setServerCommand(e.target.value);
+              } else {
+                setServerUrl(e.target.value);
               }
             }}
             required

@@ -267,6 +267,13 @@ class ConnectStreamableHttpMCPRequest(BaseModel):
     headers: Dict[str, str] | None = None
 
 
+class ConnectStreamableHttpMCPRequest(BaseModel):
+    sessionId: str
+    clientType: Literal["streamable_http"]
+    name: str
+    url: str
+
+
 ConnectMCPRequest = Union[
     ConnectStdioMCPRequest, ConnectSseMCPRequest, ConnectStreamableHttpMCPRequest
 ]
