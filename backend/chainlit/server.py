@@ -1136,6 +1136,13 @@ async def connect_mcp(
                 detail="SSE MCP is not enabled",
             )
         mcp_params["url"] = payload.url
+    elif payload.clientType == "streamable_http":
+        if not config.features.mcp.streamable_http.enabled:
+            raise HTTPException(
+                status_code=400,
+                detail="Streamable HTTP MCP is not enabled",
+            )
+        mcp_params["url"] = payload.url
     elif payload.clientType == "stdio":
         if not config.features.mcp.stdio.enabled:
             raise HTTPException(

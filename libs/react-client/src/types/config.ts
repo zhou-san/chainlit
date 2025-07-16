@@ -69,7 +69,11 @@ export interface IChainlitConfig {
     edit_message?: boolean;
     mcp?: {
       enabled?: boolean;
+      show_indicator?: boolean; // Controls visibility of the MCP connection indicator dot
       sse?: {
+        enabled?: boolean;
+      };
+      streamable_http?: {
         enabled?: boolean;
       };
       stdio?: {

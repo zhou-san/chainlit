@@ -243,7 +243,16 @@ class ConnectSseMCPRequest(BaseModel):
     url: str
 
 
-ConnectMCPRequest = Union[ConnectStdioMCPRequest, ConnectSseMCPRequest]
+class ConnectStreamableHttpMCPRequest(BaseModel):
+    sessionId: str
+    clientType: Literal["streamable_http"]
+    name: str
+    url: str
+
+
+ConnectMCPRequest = Union[
+    ConnectStdioMCPRequest, ConnectSseMCPRequest, ConnectStreamableHttpMCPRequest
+]
 
 
 class DisconnectMCPRequest(BaseModel):

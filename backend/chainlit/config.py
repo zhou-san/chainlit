@@ -118,7 +118,14 @@ edit_message = true
     # Sample rate of the audio
     sample_rate = 24000
 
+[features.mcp]
+    enabled = false
+    show_indicator = true  # Control visibility of the MCP connection indicator dot
+
 [features.mcp.sse]
+    enabled = true
+
+[features.mcp.streamable_http]
     enabled = true
 
 [features.mcp.stdio]
@@ -257,6 +264,11 @@ class McpSseFeature(DataClassJsonMixin):
 
 
 @dataclass
+class McpStreamableHttpFeature(DataClassJsonMixin):
+    enabled: bool = True
+
+
+@dataclass
 class McpStdioFeature(DataClassJsonMixin):
     enabled: bool = True
     allowed_executables: Optional[list[str]] = None
@@ -265,7 +277,11 @@ class McpStdioFeature(DataClassJsonMixin):
 @dataclass
 class McpFeature(DataClassJsonMixin):
     enabled: bool = False
+    show_indicator: bool = True  # Add option to toggle MCP indicator visibility
     sse: McpSseFeature = Field(default_factory=McpSseFeature)
+    streamable_http: McpStreamableHttpFeature = Field(
+        default_factory=McpStreamableHttpFeature
+    )
     stdio: McpStdioFeature = Field(default_factory=McpStdioFeature)
 
 

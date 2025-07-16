@@ -36,8 +36,10 @@ const McpButton = ({ disabled }: Props) => {
   const [activeTab, setActiveTab] = useState('add');
 
   const allowSse = !!config?.features.mcp?.sse?.enabled;
+  const allowStreamableHttp = !!config?.features.mcp?.streamable_http?.enabled;
   const allowStdio = !!config?.features.mcp?.stdio?.enabled;
   const allowMcp = !!config?.features.mcp?.enabled;
+  const showIndicator = config?.features.mcp?.show_indicator !== false;
 
   if (!allowMcp || (!allowSse && !allowStdio)) return null;
 
@@ -62,7 +64,7 @@ const McpButton = ({ disabled }: Props) => {
                 ) : (
                   <Plug className="!size-5" />
                 )}
-                {connectedMcps.length > 0 && (
+                {showIndicator && connectedMcps.length > 0 && (
                   <span className="absolute top-0.5 right-0.5 bg-primary text-primary-foreground text-[8px] font-medium rounded-full w-3 h-3 flex items-center justify-center">
                     {connectedMcps.length}
                   </span>
@@ -94,6 +96,7 @@ const McpButton = ({ disabled }: Props) => {
           >
             <McpAddForm
               allowSse={allowSse}
+              allowStreamableHttp={allowStreamableHttp}
               allowStdio={allowStdio}
               onSuccess={() => setActiveTab('list')}
               onCancel={() => setOpen(false)}

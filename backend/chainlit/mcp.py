@@ -1,24 +1,4 @@
-from typing import Literal, Union
-
-from pydantic import BaseModel
-
 from chainlit.config import config
-
-
-class StdioMcpConnection(BaseModel):
-    name: str
-    command: str
-    args: list[str]
-    clientType: Literal["stdio"] = "stdio"
-
-
-class SseMcpConnection(BaseModel):
-    name: str
-    url: str
-    clientType: Literal["sse"] = "sse"
-
-
-McpConnection = Union[StdioMcpConnection, SseMcpConnection]
 
 
 def validate_mcp_command(command_string: str):
