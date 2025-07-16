@@ -356,7 +356,7 @@ def on_mcp_connect(func: Callable[[Dict[str, Any]], None]) -> Callable:
     return func
 
 
-def on_mcp_disconnect(func: Callable[[str, ClientSession], None]) -> Callable:
+def on_mcp_disconnect(func: Callable[[Dict[str, Any]], None]) -> Callable:
     """
     Called everytime an MCP disconnection is requested.
     Receives MCP parameters instead of real session for UI-only control.
