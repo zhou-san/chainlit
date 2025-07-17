@@ -1,5 +1,12 @@
 <h1 align="center">Welcome to Chainlit 👋</h1>
 
+> **⚠️ NOTICE: This is a custom fork of Chainlit**
+> 
+> This is a fork of the original [Chainlit project](https://github.com/Chainlit/chainlit) maintained by AKI
+> The original Chainlit is developed by The Chainlit team and is available at https://chainlit.io/
+> 
+> This fork maintains full compatibility with the original Chainlit API.
+
 <p align="center">
 <b>Build python production-ready conversational AI applications in minutes, not weeks ⚡️</b>
 
@@ -40,18 +47,20 @@ https://github.com/user-attachments/assets/b3738aba-55c0-42fa-ac00-6efd1ee0d148
 Open a terminal and run:
 
 ```sh
-pip install chainlit
+pip install chainlit-aki
 chainlit hello
 ```
 
 If this opens the `hello app` in your browser, you're all set!
+
+**Note:** This fork maintains full API compatibility with the original Chainlit. You can still use `import chainlit as cl` in your code.
 
 ### Development version
 
 The latest in-development version can be installed straight from GitHub with:
 
 ```sh
-pip install git+https://github.com/Chainlit/chainlit.git#subdirectory=backend/
+pip install git+https://github.com/zhou-san/chainlit.git#subdirectory=backend/
 ```
 
 (Requires Node and pnpm installed on the system.)

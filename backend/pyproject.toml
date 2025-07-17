@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "chainlit"
+name = "chainlit-aki"
 version = "2.6.2"
 keywords = [
     'LLM',
@@ -13,10 +13,10 @@ keywords = [
     'langchain',
     'conversational ai',
 ]
-description = "Build Conversational AI."
+description = "Build Conversational AI. (Custom fork of Chainlit for Aki)"
 authors = ["Willy Douhard", "Dan Andre Constantini"]
 license = "Apache-2.0"
-homepage = "https://chainlit.io/"
+homepage = "https://github.com/zhou-san/chainlit"
 documentation = "https://docs.chainlit.io/"
 classifiers = [
     "Framework :: FastAPI",
@@ -27,8 +27,9 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Environment :: Web Environment"
 ]
-repository = "https://github.com/Chainlit/chainlit"
+repository = "https://github.com/zhou-san/chainlit"
 readme = "README.md"
+packages = [{include = "chainlit"}]
 exclude = ["chainlit/frontend/**/*", "chainlit/copilot/**/**/"]
 include = [
     { path = "chainlit/frontend/dist/**/*", format = ["sdist", "wheel"] },
