@@ -38,13 +38,15 @@ jobs:
     needs: [ci]
     env:
       name: ${{ inputs.use_testpypi && 'testpypi' || 'pypi' }}
-      url: ${{ inputs.use_testpypi && 'https://test.pypi.org/project/chainlit' || 'https://pypi.org/project/chainlit' }}
+      url: ${{ inputs.use_testpypi && 'https://test.pypi.org/project/chainlit' || 'https://pypi.org/project/chainlit-aki' }}
       BACKEND_DIR: ./backend
     permissions:
       contents: read
       id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: aki
       - uses: ./.github/actions/pnpm-node-install
         name: Install Node, pnpm and dependencies.
         with:
