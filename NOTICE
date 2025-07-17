@@ -1,0 +1,19 @@
+NOTICE
+
+This project is a fork of Chainlit, originally developed by The Chainlit team.
+
+Original Project: https://github.com/Chainlit/chainlit
+Original Copyright: Copyright 2023- The Chainlit team. All rights reserved.
+
+This fork is maintained by AKI and is distributed under the same Apache License 2.0.
+
+The original Chainlit project can be found at:
+- Repository: https://github.com/Chainlit/chainlit
+- Website: https://chainlit.io/
+- Documentation: https://docs.chainlit.io/
+
+This fork maintains compatibility with the original Chainlit API and does not contain
+significant modifications to the core functionality.
+
+All original copyright notices, patent, trademark, and attribution notices from the
+source form of the original work are retained in this derivative work.
