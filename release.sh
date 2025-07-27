@@ -36,13 +36,13 @@ echo "✅ Packages built"
 echo "🌍 Creating universal wheel..."
 
 # Find the platform-specific wheel file
-PLATFORM_WHEEL=$(find backend/dist -name "chainlit-${VERSION}-*.whl" | head -1)
+PLATFORM_WHEEL=$(find backend/dist -name "chainlit_aki-${VERSION}-*.whl" | head -1)
 if [ -z "$PLATFORM_WHEEL" ]; then
     echo "❌ Error: No wheel file found for version $VERSION"
     exit 1
 fi
 
-UNIVERSAL_WHEEL="backend/dist/chainlit-${VERSION}-py3-none-any.whl"
+UNIVERSAL_WHEEL="backend/dist/chainlit_aki-${VERSION}-py3-none-any.whl"
 
 # Create universal wheel using Python script
 python3 -c "
@@ -94,7 +94,7 @@ if ! command -v gh &> /dev/null; then
 fi
 
 # Create release
-SOURCE_TAR="backend/dist/chainlit-${VERSION}.tar.gz"
+SOURCE_TAR="backend/dist/chainlit_aki-${VERSION}.tar.gz"
 
 gh release create "$RELEASE_DATE" \
   "$UNIVERSAL_WHEEL" \
