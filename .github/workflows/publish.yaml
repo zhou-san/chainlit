@@ -8,9 +8,6 @@ on:
 permissions: read-all
 
 jobs:
-  ci:
-    uses: ./.github/workflows/ci.yaml
-    secrets: inherit
   build-n-publish:
     name: Upload release to PyPI
     runs-on: ubuntu-latest
