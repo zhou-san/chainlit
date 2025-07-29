@@ -37,12 +37,18 @@ const MessageContent = memo(
       const displayInput = message.input && message.showInput;
 
       const isMessage = message.type.includes('message');
+    const isUserMessage = message.type === 'user_message';
 
       const outputMarkdown = (
         <>
           {!isMessage && displayInput && message.output ? (
             <div className="font-medium">Output</div>
           ) : null}
+          {isUserMessage ? (
+          <div className="leading-7 [&:not(:first-child)]:mt-4 whitespace-pre-wrap break-words">
+            {output}
+          </div>
+        ) : (
           <Markdown
             allowHtml={allowHtml}
             latex={latex}
@@ -50,8 +56,9 @@ const MessageContent = memo(
           >
             {output}
           </Markdown>
-        </>
-      );
+        )}
+      </>
+    );
 
       let inputMarkdown;
 
