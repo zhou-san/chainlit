@@ -107,12 +107,28 @@ class BaseSession:
 
         file_id = str(uuid.uuid4())
 
-        file_path = self.files_dir / file_id
+        # Use original filename instead of UUID, with proper sanitization
+        import re
+        from pathlib import Path
+        
+        # Sanitize the filename to prevent directory traversal and invalid characters
+        sanitized_name = re.sub(r'[<>:"/\\|?*]', '_', name)
+        sanitized_name = sanitized_name.strip('. ')  # Remove leading/trailing dots and spaces
+        
+        # Ensure filename is not empty after sanitization or only contains underscores
+        if not sanitized_name or sanitized_name.replace('_', '').strip() == '':
+            sanitized_name = f"file_{file_id[:8]}"
+        
+        file_path = self.files_dir / sanitized_name
 
-        file_extension = mimetypes.guess_extension(mime)
-
-        if file_extension:
-            file_path = file_path.with_suffix(file_extension)
+        # Handle filename conflicts by adding a counter suffix
+        counter = 1
+        original_file_path = file_path
+        while file_path.exists():
+            stem = original_file_path.stem
+            suffix = original_file_path.suffix
+            file_path = self.files_dir / f"{stem}_{counter}{suffix}"
+            counter += 1
 
         if path:
             # Copy the file from the given path
