@@ -46,7 +46,7 @@ def cli():
 
 
 # Define the function to run Chainlit with provided options
-def run_chainlit(target: str):
+def run_chainlit(target: str, **uvicorn_kwargs):
     host = os.environ.get("CHAINLIT_HOST", DEFAULT_HOST)
     port = int(os.environ.get("CHAINLIT_PORT", DEFAULT_PORT))
     root_path = os.environ.get("CHAINLIT_ROOT_PATH", DEFAULT_ROOT_PATH)
@@ -89,16 +89,19 @@ def run_chainlit(target: str):
 
     # Start the server
     async def start():
-        config = uvicorn.Config(
-            app,
-            host=host,
-            port=port,
-            ws=ws_protocol,
-            log_level=log_level,
-            ws_per_message_deflate=ws_per_message_deflate,
-            ssl_keyfile=ssl_keyfile,
-            ssl_certfile=ssl_certfile,
-        )
+        # Merge default config with any additional uvicorn kwargs
+        uvicorn_config = {
+            "app": app,
+            "host": host,
+            "port": port,
+            "ws": ws_protocol,
+            "log_level": log_level,
+            "ws_per_message_deflate": ws_per_message_deflate,
+            "ssl_keyfile": ssl_keyfile,
+            "ssl_certfile": ssl_certfile,
+            **uvicorn_kwargs  # Allow any additional uvicorn configuration
+        }
+        config = uvicorn.Config(**uvicorn_config)
         server = uvicorn.Server(config)
         await server.serve()
 
@@ -176,6 +179,7 @@ def chainlit_run(
     host,
     port,
     root_path,
+    **uvicorn_kwargs,
 ):
     if host:
         os.environ["CHAINLIT_HOST"] = host
@@ -207,7 +211,7 @@ def chainlit_run(
     config.run.ssl_cert = ssl_cert
     config.run.ssl_key = ssl_key
 
-    run_chainlit(target)
+    run_chainlit(target, **uvicorn_kwargs)
 
 
 @cli.command("hello")
