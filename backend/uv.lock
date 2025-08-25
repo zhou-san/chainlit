@@ -678,7 +678,8 @@ wheels = [
 ]
 
 [[package]]
-name = "chainlit"
+name = "chainlit-aki"
+version = "2.7.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },
@@ -771,7 +772,7 @@ requires-dist = [
     { name = "literalai", specifier = "==0.1.201" },
     { name = "llama-index", marker = "extra == 'tests'", specifier = ">=0.13.0,<1.0.0" },
     { name = "matplotlib", marker = "extra == 'tests'", specifier = ">=3.7.1,<4.0.0" },
-    { name = "mcp", specifier = ">=1.11.0,<2.0.0" },
+    { name = "mcp", specifier = ">=1.0.0,<2.0.0" },
     { name = "moto", marker = "extra == 'tests'", specifier = ">=5.0.14,<6.0.0" },
     { name = "mypy", marker = "extra == 'mypy'", specifier = ">=1.13,<2.0.0" },
     { name = "mypy-boto3-dynamodb", marker = "extra == 'mypy'", specifier = ">=1.34.113,<2.0.0" },

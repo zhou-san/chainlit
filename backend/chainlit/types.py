@@ -260,18 +260,11 @@ class ConnectSseMCPRequest(BaseModel):
 
 class ConnectStreamableHttpMCPRequest(BaseModel):
     sessionId: str
-    clientType: Literal["streamable-http"]
+    clientType: Literal["streamable_http"]
     name: str
     url: str
     # Optional HTTP headers to forward to the MCP transport (e.g. Authorization)
     headers: Dict[str, str] | None = None
-
-
-class ConnectStreamableHttpMCPRequest(BaseModel):
-    sessionId: str
-    clientType: Literal["streamable_http"]
-    name: str
-    url: str
 
 
 ConnectMCPRequest = Union[

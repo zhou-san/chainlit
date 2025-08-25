@@ -9,8 +9,8 @@
     "cypress-plugin-steps": "1.2.1",
     "dotenv": "^16.3.1",
     "eslint": "^8.57.1",
-    "husky": "^9.1.6",
     "fkill": "^9.0.0",
+    "husky": "^9.1.6",
     "lint-staged": "^13.3.0",
     "prettier": "^2.8.8",
     "shell-exec": "^1.1.2",
@@ -36,5 +36,5 @@
       "micromatch@<4.0.8": ">=4.0.8"
     }
   },
-  "packageManager": "pnpm@9.15.9"
+  "packageManager": "pnpm@10.15.0"
 }

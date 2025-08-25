@@ -353,7 +353,7 @@ export class ChainlitAPI extends APIBase {
       name,
       url,
       ...(headers ? { headers } : {}),
-      clientType: 'streamable-http'
+      clientType: 'streamable_http'
     });
     return res.json();
   }

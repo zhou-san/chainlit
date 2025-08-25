@@ -272,12 +272,10 @@ class McpSseFeature(BaseModel):
     enabled: bool = True
 
 
-@dataclass
 class McpStreamableHttpFeature(BaseModel):
     enabled: bool = True
 
 
-@dataclass
 class McpStdioFeature(BaseModel):
     enabled: bool = True
     allowed_executables: Optional[list[str]] = None
