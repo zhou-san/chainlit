@@ -1218,16 +1218,17 @@ async def connect_mcp(
 
     # Call user callback with parameters instead of real session
     try:
-        result = await config.code.on_mcp_connect(mcp_params)
+        if config.code.on_mcp_connect:
+            result = await config.code.on_mcp_connect(mcp_params)
 
-        # Check if result indicates failure
-        if isinstance(result, dict) and result.get("success") is False:
-            raise HTTPException(
-                status_code=400,
-                detail=result.get("message", "MCP connection failed"),
-            )
+            # Check if result indicates failure
+            if isinstance(result, dict) and result.get("success") is False:
+                raise HTTPException(
+                    status_code=400,
+                    detail=result.get("message", "MCP connection failed"),
+                )
 
-        return JSONResponse(content=result)
+            return JSONResponse(content=result)
     except HTTPException:
         # Re-raise HTTPExceptions (including the one we create above)
         raise

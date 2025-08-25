@@ -37,7 +37,7 @@ class ExtendedChainlitAPI extends ChainlitAPI {
         ...(sessionId ? { 'x-session-id': sessionId } : {})
       },
       body: JSON.stringify({
-        clientType: 'streamable-http',
+        clientType: 'streamable_http',
         name,
         url,
         sessionId,

@@ -114,14 +114,14 @@ const McpItem = ({ mcp, onDelete, isLoading }: McpItemProps) => {
         <div className="font-medium text-sm text-muted-foreground flex items-center">
           {mcp.clientType === 'stdio' ? (
             <SquareTerminal className="h-4 w-4 mr-2" />
-          ) : mcp.clientType === 'streamable-http' ? (
+          ) : mcp.clientType === 'streamable_http' ? (
             <Link className="h-4 w-4 mr-2 text-blue-500" />
           ) : (
             <Link className="h-4 w-4 mr-2" />
           )}
           {mcp.clientType === 'stdio'
             ? 'Command'
-            : mcp.clientType === 'streamable-http'
+            : mcp.clientType === 'streamable_http'
             ? 'HTTP URL'
             : 'URL'}
         </div>
@@ -246,7 +246,7 @@ const ReconnectMcpButton = ({ mcp }: { mcp: IMcp }) => {
           error: (err) => <span>{err.message}</span>
         }
       );
-    } else if (mcp.clientType === 'streamable-http') {
+    } else if (mcp.clientType === 'streamable_http') {
       toast.promise(
         (apiClient as any)
           .connectStreamableHttpMCP(
