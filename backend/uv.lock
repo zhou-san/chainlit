@@ -678,8 +678,8 @@ wheels = [
 ]
 
 [[package]]
-name = "chainlit"
-version = "2.7.2"
+name = "chainlit-aki"
+version = "2.7.1.2"
 source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },
