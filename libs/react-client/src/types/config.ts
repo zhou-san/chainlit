@@ -82,6 +82,7 @@ export interface IChainlitConfig {
   };
   debugUrl?: string;
   userEnv: string[];
+  maskUserEnv?: boolean;
   dataPersistence: boolean;
   threadResumable: boolean;
   chatProfiles: ChatProfile[];
