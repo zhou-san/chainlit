@@ -44,42 +44,6 @@ fi
 
 UNIVERSAL_WHEEL="backend/dist/chainlit_aki-${VERSION}-py3-none-any.whl"
 
-# Create universal wheel using Python script
-python3 -c "
-import zipfile, os, tempfile, shutil, sys
-
-wheel_path = '$PLATFORM_WHEEL'
-universal_path = '$UNIVERSAL_WHEEL'
-shutil.copy2(wheel_path, universal_path)
-
-with tempfile.TemporaryDirectory() as temp_dir:
-    with zipfile.ZipFile(universal_path, 'r') as zip_ref:
-        zip_ref.extractall(temp_dir)
-    
-    for root, dirs, files in os.walk(temp_dir):
-        for file in files:
-            if file == 'WHEEL':
-                wheel_file = os.path.join(root, file)
-                with open(wheel_file, 'r') as f:
-                    content = f.read()
-                # Replace any platform-specific tag with universal tag
-                import re
-                content = re.sub(r'Tag: cp\d+-cp\d+-.*', 'Tag: py3-none-any', content)
-                with open(wheel_file, 'w') as f:
-                    f.write(content)
-                break
-    
-    os.remove(universal_path)
-    with zipfile.ZipFile(universal_path, 'w', zipfile.ZIP_DEFLATED) as zip_ref:
-        for root, dirs, files in os.walk(temp_dir):
-            for file in files:
-                file_path = os.path.join(root, file)
-                arcname = os.path.relpath(file_path, temp_dir)
-                zip_ref.write(file_path, arcname)
-
-print(f'✅ Universal wheel created: {universal_path}')
-"
-
 echo "✅ Universal wheel created"
 
 # Step 4: Create GitHub Release
