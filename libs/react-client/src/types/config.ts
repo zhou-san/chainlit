@@ -11,7 +11,7 @@ export interface ChatProfile {
   /** Display name shown to users */
   name: string;
   /** Unique identifier used for state management and API calls */
-  value: string;
+  value?: string;
   markdown_description: string;
   starters?: IStarter[];
 }
