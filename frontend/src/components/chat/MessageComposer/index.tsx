@@ -207,6 +207,11 @@ export default function MessageComposer({
             selectedCommandId={selectedCommand?.id}
             onCommandSelect={setSelectedCommand}
           />
+          <CommandButton
+            disabled={disabled}
+            selectedCommandId={selectedCommand?.id}
+            onCommandSelect={setSelectedCommand}
+          />
         </div>
         <div className="flex items-center gap-1">
           <SubmitButton
