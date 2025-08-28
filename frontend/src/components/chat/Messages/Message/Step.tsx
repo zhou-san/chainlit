@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { PropsWithChildren, useMemo } from 'react';
+import { PropsWithChildren, useMemo, useState, useEffect } from 'react';
 
 import type { IStep } from '@chainlit/react-client';
 
@@ -24,6 +24,35 @@ export default function Step({
   const using = useMemo(() => {
     return isRunning && step.start && !step.end && !step.isError;
   }, [step, isRunning]);
+
+  const isComplete = useMemo(() => {
+    return step.end !== undefined;
+  }, [step.end]);
+
+  // Initialize accordion state - open by default if step.defaultOpen is true or if step is running
+  const [accordionValue, setAccordionValue] = useState<string | undefined>(() => {
+    return step.defaultOpen || using ? step.id : undefined;
+  });
+
+  // Track previous running state to detect completion transitions
+  const [wasUsingPreviously, setWasUsingPreviously] = useState(using);
+
+  // Auto-collapse when step completes and auto-expand when step starts running
+  useEffect(() => {
+    // Detect step completion: was running previously but now complete and not running
+    if (wasUsingPreviously && !using && isComplete) {
+      // Step just completed - auto-collapse it
+      setAccordionValue(undefined);
+    } 
+    // Auto-expand when step starts running (if not already expanded)
+    else if (using && !wasUsingPreviously) {
+      // Step just started running - expand it
+      setAccordionValue(step.id);
+    }
+
+    // Update previous running state
+    setWasUsingPreviously(using);
+  }, [using, isComplete, wasUsingPreviously, step.id]);
 
   const hasContent = step.input || step.output || step.steps?.length;
   const isError = step.isError;
@@ -61,7 +90,8 @@ export default function Step({
       <Accordion
         type="single"
         collapsible
-        defaultValue={step.defaultOpen ? step.id : undefined}
+        value={accordionValue}
+        onValueChange={setAccordionValue}
         className="w-full"
       >
         <AccordionItem value={step.id} className="border-none">
