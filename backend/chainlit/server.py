@@ -1632,17 +1632,33 @@ async def get_favicon():
 
 
 @router.get("/logo")
-async def get_logo(theme: Optional[Theme] = Query(Theme.light)):
+async def get_logo(
+    theme: Optional[Theme] = Query(Theme.light),
+    profileName: Optional[str] = Query(None),
+):
     """Get the default logo for the UI."""
     theme_value = theme.value if theme else Theme.light.value
     logo_path = None
+    # Search paths in order of priority
+    search_paths = []
+    # If profileName is provided, add profile-specific path first
+    if profileName:
+        search_paths.append(
+            os.path.join(
+                public_dir, "temp_logos", f"{profileName}_{theme_value}_logo.*"
+            )
+        )
 
-    for path in [
-        os.path.join(APP_ROOT, "public", f"logo_{theme_value}.*"),
-        os.path.join(build_dir, "assets", f"logo_{theme_value}*.*"),
-    ]:
+    # # Add default paths
+    search_paths.extend(
+        [
+            os.path.join(APP_ROOT, "public", f"logo_{theme_value}.*"),
+            os.path.join(build_dir, "assets", f"logo_{theme_value}*.*"),
+        ]
+    )
+
+    for path in search_paths:
         files = glob.glob(path)
-
         if files:
             logo_path = files[0]
             break

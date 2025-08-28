@@ -302,12 +302,20 @@ class Starter(DataClassJsonMixin):
 class ChatProfile(DataClassJsonMixin):
     """Specification for a chat profile that can be chosen by the user at the thread start."""
 
+    # Display name shown to users
     name: str
     markdown_description: str
+    # Unique identifier used for state management and API calls
+    value: Optional[str] = None
     icon: Optional[str] = None
     default: bool = False
     starters: Optional[List[Starter]] = None
     config_overrides: Any = None
+
+    def __post_init__(self):
+        # If value is not provided, use name as fallback
+        if self.value is None:
+            self.value = self.name
 
 
 FeedbackStrategy = Literal["BINARY"]
