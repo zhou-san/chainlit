@@ -1,5 +1,7 @@
 import { IInput } from 'types/Input';
 
+import { SecureTagsInput } from './SecureTagsInput';
+import type { SecureTagsInputProps } from './SecureTagsInput';
 import { SelectInput, SelectInputProps } from './SelectInput';
 import { SliderInput, SliderInputProps } from './SliderInput';
 import { SwitchInput, SwitchInputProps } from './SwitchInput';
@@ -19,6 +21,7 @@ type TFormInput =
   | (Omit<SwitchInputProps, 'checked'> & IFormInput<'switch', boolean>)
   | (Omit<SliderInputProps, 'value'> & IFormInput<'slider', number>)
   | (Omit<TagsInputProps, 'value'> & IFormInput<'tags', string[]>)
+  | (Omit<SecureTagsInputProps, 'value'> & IFormInput<'secure_tags', string[]>)
   | (Omit<SelectInputProps, 'value'> & IFormInput<'select', string>)
   | (Omit<TextInputProps, 'value'> & IFormInput<'textinput', string>)
   | (Omit<TextInputProps, 'value'> & IFormInput<'numberinput', number>);
@@ -31,6 +34,8 @@ const FormInput = ({ element }: { element: TFormInput }): JSX.Element => {
       return <SliderInput {...element} value={element.value ?? 0} />;
     case 'tags':
       return <TagsInput {...element} value={element.value ?? []} />;
+    case 'secure_tags':
+      return <SecureTagsInput {...element} value={element.value ?? []} />;
     case 'switch':
       return <SwitchInput {...element} checked={!!element.value} />;
     case 'textinput':
