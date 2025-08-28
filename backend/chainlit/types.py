@@ -288,7 +288,10 @@ class Starter(DataClassJsonMixin):
 class ChatProfile(DataClassJsonMixin):
     """Specification for a chat profile that can be chosen by the user at the thread start."""
 
+    # Display name shown to users
     name: str
+    # Unique identifier used for state management and API calls
+    value: str
     markdown_description: str
     icon: Optional[str] = None
     default: bool = False

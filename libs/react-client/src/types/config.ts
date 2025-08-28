@@ -8,7 +8,10 @@ export interface IStarter {
 export interface ChatProfile {
   default: boolean;
   icon?: string;
+  /** Display name shown to users */
   name: string;
+  /** Unique identifier used for state management and API calls */
+  value: string;
   markdown_description: string;
   starters?: IStarter[];
 }

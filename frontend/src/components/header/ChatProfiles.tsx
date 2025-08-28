@@ -45,7 +45,7 @@ export default function ChatProfiles({ navigate }: Props) {
   // Handle case when no profile is selected
   useEffect(() => {
     if (!chatProfile) {
-      setChatProfile(config.chatProfiles[0].name);
+      setChatProfile(config.chatProfiles[0].value);
     }
   }, [chatProfile, config.chatProfiles, setChatProfile]);
 
@@ -53,10 +53,10 @@ export default function ChatProfiles({ navigate }: Props) {
   useEffect(() => {
     if (chatProfile) {
       const profileExists = config.chatProfiles.some(
-        (profile) => profile.name === chatProfile
+        (profile) => profile.value === chatProfile
       );
       if (!profileExists) {
-        setChatProfile(config.chatProfiles[0].name);
+        setChatProfile(config.chatProfiles[0].value);
       }
     }
   }, [chatProfile, config.chatProfiles, setChatProfile]);
@@ -103,11 +103,11 @@ export default function ChatProfiles({ navigate }: Props) {
               : profile.icon;
 
             return (
-              <HoverCard openDelay={0} closeDelay={0} key={profile.name}>
+              <HoverCard openDelay={0} closeDelay={0} key={profile.value}>
                 <HoverCardTrigger asChild>
                   <SelectItem
-                    data-test={`select-item:${profile.name}`}
-                    value={profile.name}
+                    data-test={`select-item:${profile.value}`}
+                    value={profile.value}
                     className="cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
