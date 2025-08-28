@@ -1,3 +1,4 @@
+import re
 from abc import abstractmethod
 from typing import Any, Dict, List, Optional
 
@@ -180,6 +181,58 @@ class Tags(InputWidget):
             "tooltip": self.tooltip,
             "description": self.description,
         }
+
+
+@dataclass
+class SecureTags(Tags):
+    """Enhanced Tags input that automatically detects and masks sensitive values like API keys"""
+
+    type: InputWidgetType = "secure_tags"
+
+    def _detect_sensitive_value(self, value: str) -> bool:
+        """Auto-detect if a value looks sensitive based on patterns"""
+        sensitive_patterns = [
+            r"(?i).*key.*=.*",  # Anything with "key="
+            r"(?i).*token.*=.*",  # Anything with "token="
+            r"(?i).*secret.*=.*",  # Anything with "secret="
+            r"(?i).*password.*=.*",  # Anything with "password="
+            r"(?i).*api.*=.*",  # Anything with "api="
+            r"(?i).*auth.*=.*",  # Anything with "auth="
+            r"(?i).*bearer.*=.*",  # Anything with "bearer="
+            r"(?i).*credential.*=.*",  # Anything with "credential="
+        ]
+
+        return any(re.search(pattern, value) for pattern in sensitive_patterns)
+
+    def get_masked_value(self, tag_value: str) -> str:
+        """Return masked version of a tag value for display"""
+        if not self._detect_sensitive_value(tag_value):
+            return tag_value
+
+        if "=" in tag_value:
+            key, value = tag_value.split("=", 1)
+            masked_value = self._mask_string(value)
+            return f"{key}={masked_value}"
+        else:
+            return self._mask_string(tag_value)
+
+    def _mask_string(self, value: str) -> str:
+        """Apply masking to a string value - show first 4 and last 4 chars"""
+        if len(value) <= 8:
+            return "*" * len(value)
+
+        start_chars = value[:4]
+        end_chars = value[-4:]
+        middle_length = len(value) - 8
+        middle_mask = "*" * max(4, middle_length)
+
+        return f"{start_chars}{middle_mask}{end_chars}"
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Include masking info in serialization"""
+        base_dict = super().to_dict()
+        base_dict.update({"is_secure": True, "auto_mask_sensitive": True})
+        return base_dict
 
 
 @dataclass
