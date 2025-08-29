@@ -368,17 +368,9 @@ export class ChainlitAPI extends APIBase {
     return this.buildEndpoint(`/project/file/${id}${queryParams}`);
   }
 
-  getLogoEndpoint(
-    theme: string,
-    profileName?: string,
-    configuredLogoUrl?: string
-  ) {
+  getLogoEndpoint(theme: string, configuredLogoUrl?: string) {
     if (configuredLogoUrl) return configuredLogoUrl;
-    const params = new URLSearchParams({ theme });
-    if (profileName) {
-      params.append('profileName', profileName);
-    }
-    return this.buildEndpoint(`/logo?${params.toString()}`);
+    return this.buildEndpoint(`/logo?theme=${theme}`);
   }
 
   getOAuthEndpoint(provider: string) {
