@@ -45,7 +45,7 @@ export default function ChatProfiles({ navigate }: Props) {
   // Handle case when no profile is selected
   useEffect(() => {
     if (!chatProfile) {
-      setChatProfile(config.chatProfiles[0].value || config.chatProfiles[0].name);
+      setChatProfile(config.chatProfiles[0].name);
     }
   }, [chatProfile, config.chatProfiles, setChatProfile]);
 
@@ -53,10 +53,10 @@ export default function ChatProfiles({ navigate }: Props) {
   useEffect(() => {
     if (chatProfile) {
       const profileExists = config.chatProfiles.some(
-        (profile) => (profile.value || profile.name) === chatProfile
+        (profile) => profile.name === chatProfile
       );
       if (!profileExists) {
-        setChatProfile(config.chatProfiles[0].value || config.chatProfiles[0].name);
+        setChatProfile(config.chatProfiles[0].name);
       }
     }
   }, [chatProfile, config.chatProfiles, setChatProfile]);
@@ -101,14 +101,13 @@ export default function ChatProfiles({ navigate }: Props) {
             const icon = profile.icon?.includes('/public')
               ? apiClient.buildEndpoint(profile.icon)
               : profile.icon;
-            const profileValue = profile.value || profile.name;
 
             return (
-              <HoverCard openDelay={0} closeDelay={0} key={profileValue}>
+              <HoverCard openDelay={0} closeDelay={0} key={profile.name}>
                 <HoverCardTrigger asChild>
                   <SelectItem
-                    data-test={`select-item:${profileValue}`}
-                    value={profileValue}
+                    data-test={`select-item:${profile.name}`}
+                    value={profile.name}
                     className="cursor-pointer"
                   >
                     <div className="flex items-center gap-2">

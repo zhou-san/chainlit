@@ -393,11 +393,7 @@ async def test_set_chat_profiles(
         @set_chat_profiles
         async def get_chat_profiles(user, language):
             return [
-                ChatProfile(
-                    name="Test Profile",
-                    value="test_profile",
-                    markdown_description="A test profile",
-                )
+                ChatProfile(name="Test Profile", markdown_description="A test profile")
             ]
 
         # Test that the callback is properly registered

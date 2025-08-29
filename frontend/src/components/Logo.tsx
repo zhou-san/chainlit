@@ -1,11 +1,7 @@
 import { cn } from '@/lib/utils';
 import { useContext } from 'react';
 
-import {
-  ChainlitContext,
-  useChatSession,
-  useConfig
-} from '@chainlit/react-client';
+import { ChainlitContext, useConfig } from '@chainlit/react-client';
 
 import { useTheme } from './ThemeProvider';
 
@@ -16,16 +12,11 @@ interface Props {
 export const Logo = ({ className }: Props) => {
   const { variant } = useTheme();
   const { config } = useConfig();
-  const { chatProfile } = useChatSession();
   const apiClient = useContext(ChainlitContext);
 
   return (
     <img
-      src={apiClient.getLogoEndpoint(
-        variant,
-        chatProfile,
-        config?.ui?.logo_file_url
-      )}
+      src={apiClient.getLogoEndpoint(variant, config?.ui?.logo_file_url)}
       alt="logo"
       className={cn('logo', className)}
     />
