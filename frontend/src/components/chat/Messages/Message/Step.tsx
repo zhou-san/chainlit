@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { PropsWithChildren, useMemo, useState, useEffect } from 'react';
+import { PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { IStep } from '@chainlit/react-client';
 
@@ -29,30 +29,49 @@ export default function Step({
     return step.end !== undefined;
   }, [step.end]);
 
-  // Initialize accordion state - open by default if step.defaultOpen is true or if step is running
-  const [accordionValue, setAccordionValue] = useState<string | undefined>(() => {
-    return step.defaultOpen || using ? step.id : undefined;
-  });
+  // Initialize accordion state - only auto-expand if defaultOpen=true
+  // This ensures consistency with the conditional auto-collapse behavior
+  const [accordionValue, setAccordionValue] = useState<string | undefined>(
+    () => {
+      return step.defaultOpen ? step.id : undefined;
+    }
+  );
 
-  // Track previous running state to detect completion transitions
-  const [wasUsingPreviously, setWasUsingPreviously] = useState(using);
+  // Track previous running state to detect completion transitions using useRef
+  // This avoids the dependency cycle that was preventing auto-collapse from working
+  const wasUsingPreviously = useRef(using);
 
   // Auto-collapse when step completes and auto-expand when step starts running
+  // Only apply this behavior to steps with defaultOpen=true
   useEffect(() => {
-    // Detect step completion: was running previously but now complete and not running
-    if (wasUsingPreviously && !using && isComplete) {
-      // Step just completed - auto-collapse it
-      setAccordionValue(undefined);
-    } 
-    // Auto-expand when step starts running (if not already expanded)
-    else if (using && !wasUsingPreviously) {
-      // Step just started running - expand it
-      setAccordionValue(step.id);
+    let collapseTimeout: NodeJS.Timeout;
+
+    // Only apply auto-expand/collapse behavior for steps with defaultOpen=true
+    if (step.defaultOpen) {
+      // Detect step completion: was running previously but now complete and not running
+      if (wasUsingPreviously.current && !using && isComplete) {
+        // Step just completed - auto-collapse it with a delay
+        collapseTimeout = setTimeout(() => {
+          setAccordionValue(undefined);
+        }, 1500); // 1.5 second delay - feel free to adjust this
+      }
+      // Auto-expand when step starts running (if not already expanded)
+      else if (using && !wasUsingPreviously.current) {
+        // Step just started running - expand it immediately
+        setAccordionValue(step.id);
+      }
     }
 
     // Update previous running state
-    setWasUsingPreviously(using);
-  }, [using, isComplete, wasUsingPreviously, step.id]);
+    wasUsingPreviously.current = using;
+
+    // Cleanup timeout on unmount or dependency change
+    return () => {
+      if (collapseTimeout) {
+        clearTimeout(collapseTimeout);
+      }
+    };
+  }, [using, isComplete, step.id, step.defaultOpen]);
 
   const hasContent = step.input || step.output || step.steps?.length;
   const isError = step.isError;
