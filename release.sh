@@ -28,7 +28,7 @@ echo "✅ Build environment cleaned"
 
 # Step 2: Build Clean Packages
 echo "🔨 Building packages..."
-cd backend && python build.py && poetry build
+cd backend && uv run build.py && uv build
 cd ..
 echo "✅ Packages built"
 
