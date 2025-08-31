@@ -56,7 +56,12 @@ TRANSLATIONS_DIR = os.path.join(BACKEND_ROOT, "translations")
 APP_ROOT = os.getenv("CHAINLIT_APP_ROOT", os.getcwd())
 
 # Create the directory to store the uploaded files
-FILES_DIRECTORY = Path(APP_ROOT) / ".files"
+# Check for custom upload root, fallback to APP_ROOT/.files
+upload_root = os.getenv("CHAINLIT_UPLOAD_ROOT")
+if upload_root:
+    FILES_DIRECTORY = Path(upload_root)
+else:
+    FILES_DIRECTORY = Path(APP_ROOT) / ".files"
 FILES_DIRECTORY.mkdir(exist_ok=True)
 
 config_dir = os.path.join(APP_ROOT, ".chainlit")
