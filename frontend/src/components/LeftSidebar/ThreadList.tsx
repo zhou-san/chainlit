@@ -346,11 +346,7 @@ export function ThreadList({
                                     setThreadIdToRename(thread.id);
                                     setThreadNewName(thread.name);
                                   }}
-                                  onShare={
-                                    dataPersistence
-                                      ? () => handleShareThread(thread.id)
-                                      : undefined
-                                  }
+                                  onShare={undefined}
                                   className={cn(
                                     'absolute z-20 bottom-0 top-0 right-0 bg-sidebar-accent hover:bg-sidebar-accent hover:text-primary flex opacity-0 group-hover/thread:opacity-100',
                                     isSelected &&
