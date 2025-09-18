@@ -343,3 +343,27 @@ class RadioGroup(InputWidget):
             "tooltip": self.tooltip,
             "description": self.description,
         }
+
+
+@dataclass
+class FileUpload(InputWidget):
+    """Useful to create a file upload input."""
+
+    type: InputWidgetType = "fileupload"
+    accept: Any = Field(default_factory=lambda: {"*/*": []})
+    max_files: int = 1
+    max_size_mb: int = 2
+    initial: Optional[List[str]] = Field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "type": self.type,
+            "id": self.id,
+            "label": self.label,
+            "initial": self.initial,
+            "accept": self.accept,
+            "max_files": self.max_files,
+            "max_size_mb": self.max_size_mb,
+            "tooltip": self.tooltip,
+            "description": self.description,
+        }
