@@ -27,12 +27,13 @@ InputWidgetType = Literal[
     "slider",
     "select",
     "textinput",
-    "tags", 
+    "tags",
     "secure_tags",
     "numberinput",
     "multiselect",
     "checkbox",
     "radio",
+    "fileupload",
 ]
 ToastType = Literal["info", "success", "warning", "error"]
 
