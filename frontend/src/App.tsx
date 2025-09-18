@@ -7,6 +7,7 @@ import { router } from 'router';
 import { useAuth, useChatSession, useConfig } from '@chainlit/react-client';
 
 import ChatSettingsModal from './components/ChatSettings';
+import ContextSettingsModal from './components/ContextSettings';
 import { ThemeProvider } from './components/ThemeProvider';
 import { Loader } from '@/components/Loader';
 import { Toaster } from '@/components/ui/sonner';
@@ -81,6 +82,7 @@ function App() {
       <Toaster richColors className="toast" position="top-right" />
 
       <ChatSettingsModal />
+      <ContextSettingsModal />
       <RouterProvider router={router} />
 
       <div

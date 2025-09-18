@@ -141,6 +141,13 @@ const useChatInteract = () => {
     [session?.socket]
   );
 
+  const updateContextSettings = useCallback(
+    (values: object) => {
+      session?.socket.emit('context_settings_change', values);
+    },
+    [session?.socket]
+  );
+
   const stopTask = useCallback(() => {
     setMessages((oldMessages) =>
       oldMessages.map((m) => {
@@ -173,7 +180,8 @@ const useChatInteract = () => {
     endAudioStream,
     stopTask,
     setIdToResume,
-    updateChatSettings
+    updateChatSettings,
+    updateContextSettings
   };
 };
 

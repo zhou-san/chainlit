@@ -397,3 +397,12 @@ async def change_settings(sid, settings: Dict[str, Any]):
 
     if config.code.on_settings_update:
         await config.code.on_settings_update(settings)
+
+
+@sio.on("context_settings_change")
+async def change_context_settings(sid, context_data: Dict[str, Any]):
+    """Handle context settings submit from the UI."""
+    context = init_ws_context(sid)
+
+    if config.code.on_context_update:
+        await config.code.on_context_update(context_data)

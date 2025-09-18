@@ -7,6 +7,9 @@ import {
   chatSettingsDefaultValueSelector,
   chatSettingsInputsState,
   chatSettingsValueState,
+  contextSettingsDefaultValueSelector,
+  contextSettingsInputsState,
+  contextSettingsValueState,
   elementState,
   loadingState,
   sessionState,
@@ -33,6 +36,11 @@ const useChatData = () => {
   const chatSettingsDefaultValue = useRecoilValue(
     chatSettingsDefaultValueSelector
   );
+  const contextSettingsInputs = useRecoilValue(contextSettingsInputsState);
+  const contextSettingsValue = useRecoilValue(contextSettingsValueState);
+  const contextSettingsDefaultValue = useRecoilValue(
+    contextSettingsDefaultValueSelector
+  );
 
   const connected = session?.socket.connected && !session?.error;
   const disabled =
@@ -49,6 +57,9 @@ const useChatData = () => {
     chatSettingsDefaultValue,
     chatSettingsInputs,
     chatSettingsValue,
+    contextSettingsDefaultValue,
+    contextSettingsInputs,
+    contextSettingsValue,
     connected,
     disabled,
     elements,

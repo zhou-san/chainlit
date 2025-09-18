@@ -62,7 +62,8 @@
       "actions": {
         "send": "Send message",
         "stop": "Stop Task",
-        "attachFiles": "Attach files"
+        "attachFiles": "Attach files",
+        "manageContexts": "Manage contexts"
       }
     },
     "commands": {
@@ -122,6 +123,10 @@
     "settings": {
       "title": "Settings panel",
       "customize": "Customize your chat settings here"
+    },
+    "contexts": {
+      "title": "Context panel",
+      "customize": "Manage your contexts and files here"
     },
     "watermark": "LLMs can make mistakes. Check important info."
   },

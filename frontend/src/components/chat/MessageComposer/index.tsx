@@ -14,7 +14,7 @@ import { Settings } from '@/components/icons/Settings';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'components/i18n/Translator';
 
-import { chatSettingsOpenState } from '@/state/project';
+import { chatSettingsOpenState, contextSettingsOpenState } from '@/state/project';
 import {
   IAttachment,
   attachmentsState,
@@ -24,6 +24,7 @@ import {
 import { Attachments } from './Attachments';
 import CommandButtons from './CommandButtons';
 import CommandButton from './CommandPopoverButton';
+import ContextButton from './ContextButton';
 import Input, { InputMethods } from './Input';
 import McpButton from './Mcp';
 import SubmitButton from './SubmitButton';
@@ -54,7 +55,7 @@ export default function MessageComposer({
 
   const { user } = useAuth();
   const { sendMessage, replyMessage } = useChatInteract();
-  const { askUser, chatSettingsInputs, disabled: _disabled } = useChatData();
+  const { askUser, chatSettingsInputs, contextSettingsInputs, disabled: _disabled } = useChatData();
 
   const disabled = _disabled || !!attachments.find((a) => !a.uploaded);
 
@@ -195,6 +196,9 @@ export default function MessageComposer({
             >
               <Settings className="!size-6" />
             </Button>
+          )}
+          {contextSettingsInputs.length > 0 && (
+            <ContextButton disabled={disabled} />
           )}
           <McpButton disabled={disabled} />
           <CommandButton

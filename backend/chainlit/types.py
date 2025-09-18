@@ -34,6 +34,9 @@ InputWidgetType = Literal[
     "checkbox",
     "radio",
     "fileupload",
+    "context_select",
+    "context_file_manager",
+    "context_textarea",
 ]
 ToastType = Literal["info", "success", "warning", "error"]
 

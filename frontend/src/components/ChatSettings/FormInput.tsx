@@ -27,16 +27,21 @@ type TFormInput =
   | (Omit<TagsInputProps, 'value'> & IFormInput<'tags', string[]>)
   | (Omit<SecureTagsInputProps, 'value'> & IFormInput<'secure_tags', string[]>)
   | (Omit<SelectInputProps, 'value'> & IFormInput<'select', string>)
+  | (Omit<SelectInputProps, 'value'> & IFormInput<'context_select', string>)
   | (Omit<TextInputProps, 'value'> & IFormInput<'textinput', string>)
+  | (Omit<TextInputProps, 'value'> & IFormInput<'context_textarea', string>)
   | (Omit<TextInputProps, 'value'> & IFormInput<'numberinput', number>)
   | (Omit<MultiSelectInputProps, 'value'> & IFormInput<'multiselect', string[]>)
   | (Omit<CheckboxInputProps, 'checked'> & IFormInput<'checkbox', boolean>)
   | (Omit<RadioButtonGroupProps, 'value'> & IFormInput<'radio', string>)
-  | (Omit<FileUploadInputProps, 'value'> & IFormInput<'fileupload', string[]>);
+  | (Omit<FileUploadInputProps, 'value'> & IFormInput<'fileupload', string[]>)
+  | (Omit<FileUploadInputProps, 'value'> & IFormInput<'context_file_manager', string[]>);
 
 const FormInput = ({ element }: { element: TFormInput }): JSX.Element => {
   switch (element?.type) {
     case 'select':
+      return <SelectInput {...element} value={element.value ?? ''} />;
+    case 'context_select':
       return <SelectInput {...element} value={element.value ?? ''} />;
     case 'slider':
       return <SliderInput {...element} value={element.value ?? 0} />;
@@ -48,6 +53,8 @@ const FormInput = ({ element }: { element: TFormInput }): JSX.Element => {
       return <SwitchInput {...element} checked={!!element.value} />;
     case 'textinput':
       return <TextInput {...element} value={element.value ?? ''} />;
+    case 'context_textarea':
+      return <TextInput {...element} value={element.value ?? ''} multiline={true} />;
     case 'numberinput':
       return (
         <TextInput
@@ -63,6 +70,8 @@ const FormInput = ({ element }: { element: TFormInput }): JSX.Element => {
     case 'radio':
       return <RadioButtonGroup {...element} value={element.value ?? ''} />;
     case 'fileupload':
+      return <FileUploadInput {...element} value={element.value ?? []} />;
+    case 'context_file_manager':
       return <FileUploadInput {...element} value={element.value ?? []} />;
     default:
       // If the element type is not recognized, we indicate an unimplemented type.

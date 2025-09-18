@@ -139,6 +139,10 @@ reaction_on_message_received = false
     # Sample rate of the audio
     sample_rate = 24000
 
+[features.context]
+    # Enable context management features
+    enabled = true
+
 [features.mcp]
     enabled = false
     show_indicator = true  # Control visibility of the MCP connection indicator dot
@@ -301,6 +305,10 @@ class TokenBatchingFeature(BaseModel):
     batch_window: int = 100  # Time window for collecting tokens (ms)
 
 
+class ContextFeature(BaseModel):
+    enabled: bool = True
+
+
 class McpFeature(BaseModel):
     enabled: bool = False
     show_indicator: bool = True  # Add option to toggle MCP indicator visibility
@@ -314,6 +322,7 @@ class McpFeature(BaseModel):
 class FeaturesSettings(BaseModel):
     spontaneous_file_upload: Optional[SpontaneousFileUploadFeature] = None
     audio: Optional[AudioFeature] = Field(default_factory=AudioFeature)
+    context: ContextFeature = Field(default_factory=ContextFeature)
     mcp: McpFeature = Field(default_factory=McpFeature)
     slack: SlackFeature = Field(default_factory=SlackFeature)
     token_batching: TokenBatchingFeature = Field(default_factory=TokenBatchingFeature)
@@ -390,6 +399,7 @@ class CodeSettings(BaseModel):
     on_mcp_connect: Optional[Callable] = None
     on_mcp_disconnect: Optional[Callable] = None
     on_settings_update: Optional[Callable[[Dict[str, Any]], Any]] = None
+    on_context_update: Optional[Callable[[Dict[str, Any]], Any]] = None
     set_chat_profiles: Optional[
         Callable[[Optional["User"], Optional["str"]], Awaitable[List["ChatProfile"]]]
     ] = None

@@ -143,6 +143,29 @@ export const chatSettingsValueState = atom({
   default: chatSettingsDefaultValueSelector
 });
 
+export const contextSettingsInputsState = atom<any>({
+  key: 'ContextSettings',
+  default: []
+});
+
+export const contextSettingsDefaultValueSelector = selector({
+  key: 'ContextSettingsValue/Default',
+  get: ({ get }) => {
+    const contextSettings = get(contextSettingsInputsState);
+    return contextSettings.reduce(
+      (form: { [key: string]: any }, input: any) => (
+        (form[input.id] = input.initial), form
+      ),
+      {}
+    );
+  }
+});
+
+export const contextSettingsValueState = atom({
+  key: 'ContextSettingsValue',
+  default: contextSettingsDefaultValueSelector
+});
+
 export const elementState = atom<IMessageElement[]>({
   key: 'DisplayElements',
   default: []

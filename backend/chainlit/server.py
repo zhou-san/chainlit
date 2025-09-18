@@ -801,6 +801,8 @@ async def project_translations(
 
     # Load translation based on the provided language
     translation = config.load_translation(language)
+    print(f"Language: {language}")
+    print(f"translation {translation["chat"]}")
 
     return JSONResponse(
         content={

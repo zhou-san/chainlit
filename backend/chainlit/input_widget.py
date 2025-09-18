@@ -367,3 +367,90 @@ class FileUpload(InputWidget):
             "tooltip": self.tooltip,
             "description": self.description,
         }
+
+
+@dataclass
+class ContextSelect(InputWidget):
+    """Useful to create a context selector input."""
+
+    type: InputWidgetType = "context_select"
+    initial: Optional[str] = None
+    values: List[str] = Field(default_factory=list)
+    items: Dict[str, str] = Field(default_factory=dict)
+
+    def __post_init__(
+        self,
+    ) -> None:
+        super().__post_init__()
+
+        if not self.values and not self.items:
+            raise ValueError("Must provide values or items to create a ContextSelect")
+
+        if self.values and self.items:
+            raise ValueError(
+                "You can only provide either values or items to create a ContextSelect"
+            )
+
+        if self.values:
+            self.items = {value: value for value in self.values}
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "type": self.type,
+            "id": self.id,
+            "label": self.label,
+            "initial": self.initial,
+            "items": [
+                {"label": id, "value": value} for id, value in self.items.items()
+            ],
+            "tooltip": self.tooltip,
+            "description": self.description,
+        }
+
+
+@dataclass
+class ContextFileManager(InputWidget):
+    """Useful to create a context-aware file manager combining upload and selection."""
+
+    type: InputWidgetType = "context_file_manager"
+    accept: Any = Field(default_factory=lambda: {"*/*": []})
+    max_files: int = 5
+    max_size_mb: int = 10
+    uploaded_files: List[str] = Field(default_factory=list)
+    selected_files: Optional[List[str]] = Field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "type": self.type,
+            "id": self.id,
+            "label": self.label,
+            "accept": self.accept,
+            "max_files": self.max_files,
+            "max_size_mb": self.max_size_mb,
+            "uploaded_files": self.uploaded_files,
+            "selected_files": self.selected_files,
+            "tooltip": self.tooltip,
+            "description": self.description,
+        }
+
+
+@dataclass
+class ContextTextArea(InputWidget):
+    """Useful to create a context description or parameters text area."""
+
+    type: InputWidgetType = "context_textarea"
+    initial: Optional[str] = None
+    placeholder: Optional[str] = None
+    rows: int = 4
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "type": self.type,
+            "id": self.id,
+            "label": self.label,
+            "initial": self.initial,
+            "placeholder": self.placeholder,
+            "rows": self.rows,
+            "tooltip": self.tooltip,
+            "description": self.description,
+        }

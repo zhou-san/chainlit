@@ -4,7 +4,18 @@ import mimetypes
 import re
 import shutil
 import uuid
-from typing import TYPE_CHECKING, Any, Callable, Deque, Dict, Literal, Optional, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Deque,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    TypedDict,
+    Union,
+)
 
 import aiofiles
 
@@ -17,6 +28,19 @@ if TYPE_CHECKING:
     from chainlit.user import PersistedUser, User
 
 ClientType = Literal["webapp", "copilot", "teams", "slack", "discord"]
+
+
+class ContextData(TypedDict):
+    """Data structure for storing context information."""
+
+    id: str
+    name: str
+    description: Optional[str]
+    associated_files: List[str]  # List of file IDs associated with this context
+    active_files: List[str]  # List of currently active file IDs
+    parameters: Dict[str, Any]  # Context-specific parameters
+    created_at: str
+    updated_at: str
 
 
 class JSONEncoderIgnoreNonSerializable(json.JSONEncoder):
@@ -85,6 +109,11 @@ class BaseSession:
 
         self.chat_settings: Dict[str, Any] = {}
 
+        # Context management
+        self.contexts: Dict[str, ContextData] = {}
+        self.active_context: Optional[str] = None
+        self.context_settings: Dict[str, Any] = {}
+
     @property
     def files_dir(self):
         from chainlit.config import FILES_DIRECTORY
@@ -110,15 +139,17 @@ class BaseSession:
         # Use original filename instead of UUID, with proper sanitization
         import re
         from pathlib import Path
-        
+
         # Sanitize the filename to prevent directory traversal and invalid characters
-        sanitized_name = re.sub(r'[<>:"/\\|?*]', '_', name)
-        sanitized_name = sanitized_name.strip('. ')  # Remove leading/trailing dots and spaces
-        
+        sanitized_name = re.sub(r'[<>:"/\\|?*]', "_", name)
+        sanitized_name = sanitized_name.strip(
+            ". "
+        )  # Remove leading/trailing dots and spaces
+
         # Ensure filename is not empty after sanitization or only contains underscores
-        if not sanitized_name or sanitized_name.replace('_', '').strip() == '':
+        if not sanitized_name or sanitized_name.replace("_", "").strip() == "":
             sanitized_name = f"file_{file_id[:8]}"
-        
+
         file_path = self.files_dir / sanitized_name
 
         # Handle filename conflicts by adding a counter suffix
@@ -156,6 +187,85 @@ class BaseSession:
         }
 
         return {"id": file_id}
+
+    def create_context(
+        self,
+        name: str,
+        description: Optional[str] = None,
+        parameters: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """Create a new context."""
+        from chainlit.utils import utc_now
+
+        context_id = str(uuid.uuid4())
+        self.contexts[context_id] = {
+            "id": context_id,
+            "name": name,
+            "description": description,
+            "associated_files": [],
+            "active_files": [],
+            "parameters": parameters or {},
+            "created_at": utc_now(),
+            "updated_at": utc_now(),
+        }
+
+        # Set as active context if it's the first one
+        if not self.active_context:
+            self.active_context = context_id
+
+        return context_id
+
+    def switch_context(self, context_id: str) -> bool:
+        """Switch to a different context."""
+        if context_id in self.contexts:
+            self.active_context = context_id
+            return True
+        return False
+
+    def get_active_context(self) -> Optional[ContextData]:
+        """Get the currently active context."""
+        if self.active_context and self.active_context in self.contexts:
+            return self.contexts[self.active_context]
+        return None
+
+    def add_file_to_context(self, context_id: str, file_id: str) -> bool:
+        """Associate a file with a context."""
+        if context_id in self.contexts and file_id in self.files:
+            if file_id not in self.contexts[context_id]["associated_files"]:
+                self.contexts[context_id]["associated_files"].append(file_id)
+                self.contexts[context_id]["updated_at"] = self._get_current_time()
+            return True
+        return False
+
+    def set_active_files_for_context(
+        self, context_id: str, file_ids: List[str]
+    ) -> bool:
+        """Set which files are active for a specific context."""
+        if context_id in self.contexts:
+            # Validate that all file_ids are associated with this context
+            associated_files = self.contexts[context_id]["associated_files"]
+            valid_file_ids = [fid for fid in file_ids if fid in associated_files]
+
+            self.contexts[context_id]["active_files"] = valid_file_ids
+            self.contexts[context_id]["updated_at"] = self._get_current_time()
+            return True
+        return False
+
+    def update_context_parameters(
+        self, context_id: str, parameters: Dict[str, Any]
+    ) -> bool:
+        """Update parameters for a specific context."""
+        if context_id in self.contexts:
+            self.contexts[context_id]["parameters"].update(parameters)
+            self.contexts[context_id]["updated_at"] = self._get_current_time()
+            return True
+        return False
+
+    def _get_current_time(self) -> str:
+        """Get current time as string."""
+        from chainlit.utils import utc_now
+
+        return utc_now()
 
     def to_persistable(self) -> Dict:
         from chainlit.config import config

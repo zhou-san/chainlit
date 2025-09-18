@@ -16,6 +16,8 @@ import {
   chatProfileState,
   chatSettingsInputsState,
   chatSettingsValueState,
+  contextSettingsInputsState,
+  contextSettingsValueState,
   commandsState,
   currentThreadIdState,
   elementState,
@@ -105,6 +107,7 @@ const useChatSession = () => {
   const setAudioConnection = useSetRecoilState(audioConnectionState);
   const resetChatSettingsValue = useResetRecoilState(chatSettingsValueState);
   const setChatSettingsValue = useSetRecoilState(chatSettingsValueState);
+  const resetContextSettingsValue = useResetRecoilState(contextSettingsValueState);
   const setFirstUserInteraction = useSetRecoilState(firstUserInteraction);
   const setLoading = useSetRecoilState(loadingState);
   const setMcps = useSetRecoilState(mcpState);
@@ -119,6 +122,7 @@ const useChatSession = () => {
   const setTasklists = useSetRecoilState(tasklistState);
   const setActions = useSetRecoilState(actionState);
   const setChatSettingsInputs = useSetRecoilState(chatSettingsInputsState);
+  const setContextSettingsInputs = useSetRecoilState(contextSettingsInputsState);
   const setTokenCount = useSetRecoilState(tokenCountState);
   const [chatProfile, setChatProfile] = useRecoilState(chatProfileState);
   const idToResume = useRecoilValue(threadIdToResumeState);
@@ -541,6 +545,11 @@ const useChatSession = () => {
       socket.on('chat_settings', (inputs: any) => {
         setChatSettingsInputs(inputs);
         resetChatSettingsValue();
+      });
+
+      socket.on('context_settings', (inputs: any) => {
+        setContextSettingsInputs(inputs);
+        resetContextSettingsValue();
       });
 
       socket.on('set_commands', (commands: ICommand[]) => {

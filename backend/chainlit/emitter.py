@@ -138,6 +138,10 @@ class BaseChainlitEmitter:
         """Stub method to set chat settings."""
         pass
 
+    async def set_context_settings(self, settings: dict):
+        """Stub method to set context settings."""
+        pass
+
     async def set_commands(self, commands: List[CommandDict]):
         """Stub method to send the available commands to the UI."""
         pass
@@ -430,6 +434,9 @@ class ChainlitEmitter(BaseChainlitEmitter):
 
     def set_chat_settings(self, settings: Dict[str, Any]):
         self.session.chat_settings = settings
+
+    def set_context_settings(self, settings: Dict[str, Any]):
+        self.session.context_settings = settings
 
     def set_commands(self, commands: List[CommandDict]):
         """Send the available commands to the UI."""

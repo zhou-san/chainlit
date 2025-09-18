@@ -23,6 +23,7 @@ from chainlit.action import Action
 from chainlit.cache import cache
 from chainlit.chat_context import chat_context
 from chainlit.chat_settings import ChatSettings
+from chainlit.context_settings import ContextSettings
 from chainlit.context import context
 from chainlit.element import (
     Audio,
@@ -76,6 +77,7 @@ from .callbacks import (
     on_mcp_disconnect,
     on_message,
     on_settings_update,
+    on_context_update,
     on_shared_thread_view,
     on_stop,
     on_window_message,
@@ -177,6 +179,7 @@ __all__ = [
     "ChatGeneration",
     "ChatProfile",
     "ChatSettings",
+    "ContextSettings",
     "CompletionGeneration",
     "CopilotFunction",
     "CustomElement",
@@ -232,6 +235,7 @@ __all__ = [
     "on_mcp_disconnect",
     "on_message",
     "on_settings_update",
+    "on_context_update",
     "on_shared_thread_view",
     "on_stop",
     "on_window_message",

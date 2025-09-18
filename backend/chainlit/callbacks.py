@@ -445,6 +445,40 @@ def on_settings_update(
     return func
 
 
+def on_context_update(
+    func: Callable[[Dict[str, Any]], Any],
+) -> Callable[[Dict[str, Any]], Any]:
+    """
+    Hook to react to the user changing context settings.
+
+    Args:
+        func (Callable[[Dict[str, Any]], Any]): The hook to execute after context was changed.
+                                                 Receives context data including:
+                                                 - active_context: str - name of active context
+                                                 - selected_files: List[str] - list of active file names
+                                                 - context_params: Dict[str, Any] - context parameters
+
+    Example:
+        @cl.on_context_update
+        async def handle_context_change(context_data):
+            active_context = context_data.get("active_context")
+            selected_files = context_data.get("selected_files", [])
+
+            if active_context == "research":
+                # Process research documents
+                await process_research_files(selected_files)
+            elif active_context == "coding":
+                # Process code files
+                await process_code_files(selected_files)
+
+    Returns:
+        Callable[[Dict[str, Any]], Any]: The decorated hook.
+    """
+
+    config.code.on_context_update = wrap_user_function(func, with_task=True)
+    return func
+
+
 def data_layer(
     func: Callable[[], BaseDataLayer],
 ) -> Callable[[], BaseDataLayer]:

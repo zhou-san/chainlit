@@ -1,6 +1,8 @@
 import { Upload, X } from 'lucide-react';
 import { useState } from 'react';
 
+import { useChatInteract } from '@chainlit/react-client';
+
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -33,7 +35,10 @@ const FileUploadInput = ({
   max_files = 1,
   max_size_mb = 2
 }: FileUploadInputProps): JSX.Element => {
+  const { uploadFile } = useChatInteract();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<{id: string, name: string}[]>([]);
+  const [uploading, setUploading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
   const fileSpec: FileSpec = {
@@ -42,7 +47,12 @@ const FileUploadInput = ({
     max_size_mb
   };
 
-  const onResolved = (files: File[]) => {
+  const onResolved = async (files: File[]) => {
+    // Prevent duplicate uploads
+    if (uploading) {
+      return;
+    }
+
     // Handle adding to existing files for multiple file support
     const newFiles = max_files > 1 ? [...selectedFiles, ...files] : files;
 
@@ -50,9 +60,38 @@ const FileUploadInput = ({
     const limitedFiles = newFiles.slice(0, max_files);
 
     setSelectedFiles(limitedFiles);
-    const fileNames = limitedFiles.map((file) => file.name);
-    setField?.(id, fileNames);
+    setUploading(true);
     setError('');
+
+    try {
+      // Upload each file to the backend sequentially to avoid promise issues
+      const uploadResults = [];
+      for (const file of limitedFiles) {
+        const upload = uploadFile(file, () => {}); // Returns {xhr, promise}
+        const result = await upload.promise; // Await the actual promise
+        uploadResults.push(result);
+      }
+
+      // Store uploaded file info using IDs from upload response
+      const newUploadedFiles = uploadResults
+        .filter((result) => result && result.id)
+        .map((result, index) => ({
+          id: result.id,
+          name: limitedFiles[index].name
+        }));
+
+      setUploadedFiles(newUploadedFiles);
+
+      // Store file IDs in form field
+      const fileIds = newUploadedFiles.map((file) => file.id);
+      setField?.(id, fileIds);
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      setError(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setUploading(false);
+    }
 
     // Show warning if files were truncated
     if (newFiles.length > max_files) {
@@ -73,13 +112,18 @@ const FileUploadInput = ({
 
   const handleRemoveFile = (index: number) => {
     const newFiles = selectedFiles.filter((_, i) => i !== index);
+    const newUploadedFiles = uploadedFiles.filter((_, i) => i !== index);
+
     setSelectedFiles(newFiles);
-    const fileNames = newFiles.map((file) => file.name);
-    setField?.(id, fileNames);
+    setUploadedFiles(newUploadedFiles);
+
+    const fileIds = newUploadedFiles.map((file) => file.id);
+    setField?.(id, fileIds);
   };
 
   const handleClearAll = () => {
     setSelectedFiles([]);
+    setUploadedFiles([]);
     setField?.(id, []);
     setError('');
   };
@@ -100,9 +144,9 @@ const FileUploadInput = ({
         <Card className="border-dashed border-2 hover:border-primary/50 transition-colors">
           <div
             {...getRootProps()}
-            className="flex items-center justify-center p-4 cursor-pointer"
+            className={`flex items-center justify-center p-4 ${uploading || disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
           >
-            <input {...getInputProps()} disabled={disabled} />
+            <input {...getInputProps()} disabled={disabled || uploading} />
             <div className="text-center">
               <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">
@@ -123,11 +167,15 @@ const FileUploadInput = ({
 
         {error && <div className="text-sm text-destructive">{error}</div>}
 
-        {selectedFiles.length > 0 && (
+        {uploading && (
+          <div className="text-sm text-muted-foreground">Uploading files...</div>
+        )}
+
+        {uploadedFiles.length > 0 && !uploading && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium">
-                Selected Files ({selectedFiles.length}/{max_files}):
+                Uploaded Files ({uploadedFiles.length}/{max_files}):
               </p>
               <Button
                 type="button"
@@ -140,7 +188,7 @@ const FileUploadInput = ({
               </Button>
             </div>
             <div className="space-y-1">
-              {selectedFiles.map((file, index) => (
+              {uploadedFiles.map((file, index) => (
                 <div
                   key={index}
                   className="flex items-center justify-between p-2 bg-muted rounded-md"
@@ -148,7 +196,7 @@ const FileUploadInput = ({
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{file.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {(file.size / 1024 / 1024).toFixed(2)} MB • {file.type || 'Unknown type'}
+                      Uploaded successfully • ID: {file.id}
                     </p>
                   </div>
                   <Button
