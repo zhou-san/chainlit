@@ -219,7 +219,25 @@ copilot_build_dir = get_build_dir(os.path.join("libs", "copilot"), "copilot")
 
 app = FastAPI(lifespan=lifespan)
 
-sio = socketio.AsyncServer(cors_allowed_origins=[], async_mode="asgi")
+sio = socketio.AsyncServer(
+    cors_allowed_origins=[],
+    async_mode="asgi",
+    
+    # Connection settings
+    ping_timeout=60,        # Increase from default 20s to 60s
+    ping_interval=25,       # Keep at 25s (heartbeat every 25s)
+    max_http_buffer_size=1e8,  # 100MB (increase from default 1MB)
+    
+    # Performance settings
+    compression_threshold=1024,  # Compress messages > 1KB
+    
+    # Allow reconnections
+    allow_upgrades=True,
+    
+    # Logger for debugging
+    logger=True if config.run.debug else False,
+    engineio_logger=True if config.run.debug else False,
+)
 
 asgi_app = socketio.ASGIApp(socketio_server=sio, socketio_path="")
 

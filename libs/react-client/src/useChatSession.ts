@@ -124,7 +124,14 @@ const useChatSession = () => {
           threadId: idToResume || '',
           userEnv: JSON.stringify(userEnv),
           chatProfile: chatProfile ? encodeURIComponent(chatProfile) : ''
-        }
+        },
+        // Reconnection settings
+        reconnection: true, // Enable auto-reconnection
+        reconnectionAttempts: Infinity, // Keep trying forever
+        reconnectionDelay: 1000, // Start with 1 second
+        reconnectionDelayMax: 5000, // Max 5 seconds between attempts
+        randomizationFactor: 0.5, // Randomize delay by ±50%
+        timeout: 20000 // Connection timeout (20s)
       });
       setSession((old) => {
         old?.socket?.removeAllListeners();
@@ -192,6 +199,39 @@ const useChatSession = () => {
         setSession((s) => ({ ...s!, error: true }));
       });
 
+      socket.on('reconnect', (attemptNumber) => {
+        console.log(`Reconnected after ${attemptNumber} attempts`);
+        setSession((s) => ({ ...s!, error: false }));
+        // Clear any error states and re-establish connection
+        toast.success('Connection restored!');
+      });
+
+      socket.on('reconnect_attempt', (attemptNumber) => {
+        console.log(`Reconnection attempt ${attemptNumber}`);
+        if (attemptNumber === 1) {
+          toast.info('Connection lost, attempting to reconnect...');
+        }
+      });
+
+      socket.on('reconnect_error', (error) => {
+        console.error('Reconnection error:', error);
+      });
+
+      socket.on('reconnect_failed', () => {
+        console.error('Failed to reconnect after all attempts');
+        setSession((s) => ({ ...s!, error: true }));
+        toast.error('Unable to reconnect. Please refresh the page.');
+      });
+
+      socket.on('disconnect', (reason) => {
+        console.log('Disconnected:', reason);
+        if (reason === 'io server disconnect') {
+          // Server-initiated disconnect, try to reconnect
+          socket.connect();
+        }
+        setSession((s) => ({ ...s!, error: true }));
+      });
+
       socket.on('task_start', () => {
         setLoading(true);
       });
@@ -241,7 +281,9 @@ const useChatSession = () => {
       });
 
       socket.on('resume_thread', (thread: IThread) => {
-        const isReadOnlyView = Boolean((thread as any)?.metadata?.viewer_read_only);
+        const isReadOnlyView = Boolean(
+          (thread as any)?.metadata?.viewer_read_only
+        );
         if (!isReadOnlyView && idToResume && thread.id !== idToResume) {
           window.location.href = `/thread/${thread.id}`;
         }
