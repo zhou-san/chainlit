@@ -21,9 +21,12 @@ import {
 import { groupByDate } from './utils/group';
 import { WavRecorder, WavStreamPlayer } from './wavtools';
 
+export type ConnectionStatus = 'connected' | 'connecting' | 'reconnecting' | 'failed';
+
 export interface ISession {
   socket: Socket;
   error?: boolean;
+  connectionStatus?: ConnectionStatus;
 }
 
 export const threadIdToResumeState = atom<string | undefined>({

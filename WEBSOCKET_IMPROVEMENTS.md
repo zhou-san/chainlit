@@ -112,14 +112,85 @@ socket.on('disconnect', (reason) => {
 - Improved resilience to network issues
 - Reduced need for manual page refreshes
 
+### 3. Debug Logging System
+
+**Integrated with Chainlit's existing debug flag:**
+
+When you run Chainlit with the `--debug` flag, comprehensive debug logging is automatically enabled in the browser console:
+
+```bash
+chainlit run app.py --debug
+```
+
+**To see the logs:**
+1. Run Chainlit with `--debug` flag
+2. Open your browser's Developer Tools (F12)
+3. Go to the Console tab
+4. Trigger streaming in your application
+5. Watch for `[Chainlit Debug]` messages
+
+**Debug logs include:**
+- WebSocket connection events and transport information
+- Stream start/end events with timestamps
+- Token streaming metrics (frequency, timing, buffer status)
+- Performance warnings for slow updates (>16ms)
+- Socket buffer health monitoring
+- Automatic warnings for concerning patterns (tokens <5ms apart)
+
+**Sample debug output:**
+```javascript
+[Chainlit Debug] WebSocket connected {
+  transport: 'websocket',
+  sessionId: 'abc123',
+  timestamp: '2024-01-01T12:00:00.000Z'
+}
+
+[Chainlit Debug] Stream started {
+  messageId: 'msg-456',
+  messageType: 'assistant_message',
+  timestamp: '2024-01-01T12:00:01.000Z'
+}
+
+[Chainlit Debug] Streaming metrics update {
+  messageId: 'msg-456',
+  tokensReceived: 50,
+  timeSinceLastToken: 15,
+  fastTokens: 5,
+  slowTokens: 2,
+  socketBufferLength: 0,
+  transport: 'websocket'
+}
+
+[Chainlit Debug] Very fast token streaming detected {
+  messageId: 'msg-456',
+  tokensInLast5ms: 10,
+  timeSinceLastToken: 3,
+  bufferLength: 0
+}
+
+[Chainlit Debug] Slow token update detected {
+  messageId: 'msg-456',
+  updateTime: '23.45ms',
+  tokenLength: 156,
+  isSequence: false
+}
+```
+
+**What to look for:**
+- **High `fastTokens` count**: Indicates tokens arriving very rapidly (may overwhelm browser)
+- **Large `socketBufferLength`**: Shows WebSocket buffer backup (connection issue)
+- **Slow update warnings**: DOM updates taking >16ms (performance issue)
+- **Connection status changes**: Helps identify network interruptions
+
 ## Testing Scenarios
 
 To test the improvements:
 
-1. **Heavy Streaming Test**: Use `cl.message.stream_token()` extensively and verify the frontend doesn't get stuck
+1. **Heavy Streaming Test**: Use `cl.message.stream_token()` extensively with debug mode enabled to monitor performance
 2. **Network Interruption**: Temporarily disconnect network and verify automatic reconnection
 3. **Server Restart**: Restart the Chainlit server and verify client reconnects automatically
 4. **Browser Tab Background**: Put tab in background during streaming and verify it continues working when brought back to foreground
+5. **Debug Mode Testing**: Run with `--debug` flag and monitor console for performance warnings during heavy streaming
 
 ## Configuration Notes
 

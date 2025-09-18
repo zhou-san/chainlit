@@ -54,12 +54,46 @@ import { OutputAudioChunk } from './types/audio';
 
 import { ChainlitContext } from './context';
 import type { IToken } from './useChatData';
+import { configState } from './state';
 
 const useChatSession = () => {
   const client = useContext(ChainlitContext);
   const sessionId = useRecoilValue(sessionIdState);
+  const config = useRecoilValue(configState);
 
   const [session, setSession] = useRecoilState(sessionState);
+  
+  // Debug helper - only active when debug mode is enabled
+  const debugEnabled = Boolean(config?.debug);
+  const debug = {
+    enabled: debugEnabled,
+    log: (...args: any[]) => {
+      if (debugEnabled) console.log('[Chainlit Debug]', ...args);
+    },
+    warn: (...args: any[]) => {
+      if (debugEnabled) console.warn('[Chainlit Debug]', ...args);
+    },
+    error: (...args: any[]) => {
+      if (debugEnabled) console.error('[Chainlit Debug]', ...args);
+    },
+    time: (label: string) => {
+      if (debugEnabled) console.time(`[Chainlit Debug] ${label}`);
+    },
+    timeEnd: (label: string) => {
+      if (debugEnabled) console.timeEnd(`[Chainlit Debug] ${label}`);
+    }
+  };
+
+  // Stream metrics for debug monitoring (only created when debug is enabled)
+  const streamMetrics = debugEnabled ? {
+    tokensReceived: 0,
+    lastTokenTime: Date.now(),
+    streamStartTime: 0,
+    messageUpdates: 0,
+    fastTokens: 0,
+    slowTokens: 0,
+    connectionHealth: Date.now()
+  } : null;
   const setIsAiSpeaking = useSetRecoilState(isAiSpeakingState);
   const setAudioConnection = useSetRecoilState(audioConnectionState);
   const resetChatSettingsValue = useResetRecoilState(chatSettingsValueState);
@@ -142,8 +176,20 @@ const useChatSession = () => {
       });
 
       socket.on('connect', () => {
+        debug.log('WebSocket connected', {
+          transport: socket.io.engine.transport.name,
+          sessionId,
+          timestamp: new Date().toISOString()
+        });
         socket.emit('connection_successful');
-        setSession((s) => ({ ...s!, error: false }));
+        setSession((s) => ({ ...s!, error: false, connectionStatus: 'connected' }));
+        
+        // Reset stream metrics on new connection
+        if (streamMetrics) {
+          streamMetrics.connectionHealth = Date.now();
+          streamMetrics.tokensReceived = 0;
+          streamMetrics.messageUpdates = 0;
+        }
         setMcps((prev) =>
           prev.map((mcp) => {
             let promise;
@@ -196,18 +242,19 @@ const useChatSession = () => {
       });
 
       socket.on('connect_error', (_) => {
-        setSession((s) => ({ ...s!, error: true }));
+        setSession((s) => ({ ...s!, error: true, connectionStatus: 'failed' }));
       });
 
       socket.on('reconnect', (attemptNumber) => {
         console.log(`Reconnected after ${attemptNumber} attempts`);
-        setSession((s) => ({ ...s!, error: false }));
+        setSession((s) => ({ ...s!, error: false, connectionStatus: 'connected' }));
         // Clear any error states and re-establish connection
         toast.success('Connection restored!');
       });
 
       socket.on('reconnect_attempt', (attemptNumber) => {
         console.log(`Reconnection attempt ${attemptNumber}`);
+        setSession((s) => ({ ...s!, connectionStatus: 'reconnecting' }));
         if (attemptNumber === 1) {
           toast.info('Connection lost, attempting to reconnect...');
         }
@@ -219,17 +266,18 @@ const useChatSession = () => {
 
       socket.on('reconnect_failed', () => {
         console.error('Failed to reconnect after all attempts');
-        setSession((s) => ({ ...s!, error: true }));
+        setSession((s) => ({ ...s!, error: true, connectionStatus: 'failed' }));
         toast.error('Unable to reconnect. Please refresh the page.');
       });
 
       socket.on('disconnect', (reason) => {
         console.log('Disconnected:', reason);
+        setSession((s) => ({ ...s!, connectionStatus: 'reconnecting' }));
         if (reason === 'io server disconnect') {
           // Server-initiated disconnect, try to reconnect
           socket.connect();
         }
-        setSession((s) => ({ ...s!, error: true }));
+        // Don't set error: true immediately on disconnect, let reconnection logic handle it
       });
 
       socket.on('task_start', () => {
@@ -341,12 +389,65 @@ const useChatSession = () => {
       });
 
       socket.on('stream_start', (message: IStep) => {
+        debug.log('Stream started', {
+          messageId: message.id,
+          messageType: message.type,
+          timestamp: new Date().toISOString()
+        });
+        
+        if (streamMetrics) {
+          streamMetrics.streamStartTime = Date.now();
+          streamMetrics.tokensReceived = 0;
+          streamMetrics.messageUpdates = 0;
+        }
+        
         setMessages((oldMessages) => addMessage(oldMessages, message));
       });
 
       socket.on(
         'stream_token',
         ({ id, token, isSequence, isInput }: IToken) => {
+          const startTime = performance.now();
+          
+          // Debug tracking for streaming performance
+          if (streamMetrics) {
+            const now = Date.now();
+            const timeSinceLastToken = now - streamMetrics.lastTokenTime;
+            streamMetrics.tokensReceived++;
+            streamMetrics.lastTokenTime = now;
+            
+            // Track token frequency patterns
+            if (timeSinceLastToken < 10) {
+              streamMetrics.fastTokens++;
+            } else if (timeSinceLastToken > 1000) {
+              streamMetrics.slowTokens++;
+            }
+            
+            // Log concerning patterns
+            if (streamMetrics.tokensReceived % 50 === 0) {
+              const engine = socket.io.engine;
+              debug.log('Streaming metrics update', {
+                messageId: id,
+                tokensReceived: streamMetrics.tokensReceived,
+                timeSinceLastToken,
+                fastTokens: streamMetrics.fastTokens,
+                slowTokens: streamMetrics.slowTokens,
+                socketBufferLength: engine.writeBuffer?.length || 0,
+                transport: engine.transport?.name || 'unknown'
+              });
+            }
+            
+            // Warn about potential issues
+            if (timeSinceLastToken < 5 && streamMetrics.fastTokens > 0 && streamMetrics.fastTokens % 10 === 0) {
+              debug.warn('Very fast token streaming detected', {
+                messageId: id,
+                tokensInLast5ms: streamMetrics.fastTokens,
+                timeSinceLastToken,
+                bufferLength: socket.io.engine.writeBuffer?.length || 0
+              });
+            }
+          }
+          
           setMessages((oldMessages) =>
             updateMessageContentById(
               oldMessages,
@@ -356,6 +457,17 @@ const useChatSession = () => {
               isInput
             )
           );
+          
+          // Performance monitoring
+          const updateTime = performance.now() - startTime;
+          if (debugEnabled && updateTime > 16) {
+            debug.warn('Slow token update detected', {
+              messageId: id,
+              updateTime: updateTime.toFixed(2) + 'ms',
+              tokenLength: token.length,
+              isSequence
+            });
+          }
         }
       );
 

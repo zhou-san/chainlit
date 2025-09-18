@@ -29,6 +29,7 @@ export interface IAuthConfig {
 
 export interface IChainlitConfig {
   markdown?: string;
+  debug?: boolean;
   ui: {
     name: string;
     description?: string;

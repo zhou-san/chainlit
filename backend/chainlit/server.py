@@ -870,6 +870,7 @@ async def project_settings(
             "chatProfiles": profiles,
             "starters": starters,
             "debugUrl": debug_url,
+            "debug": config.run.debug,  # Add debug flag for frontend logging
         }
     )
 

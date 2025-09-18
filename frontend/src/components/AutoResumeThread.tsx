@@ -36,7 +36,7 @@ export default function AutoResumeThread({ id }: Props) {
     if (id !== idToResume) {
       return;
     }
-    if (session?.error) {
+    if (session?.error && session?.connectionStatus === 'failed') {
       toast.error("Couldn't resume chat");
       navigate('/');
     }
