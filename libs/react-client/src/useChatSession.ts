@@ -1,5 +1,5 @@
 import { debounce } from 'lodash';
-import { useCallback, useContext, useEffect } from 'react';
+import { useCallback, useContext, useEffect, useRef } from 'react';
 import {
   useRecoilState,
   useRecoilValue,
@@ -55,11 +55,18 @@ import { OutputAudioChunk } from './types/audio';
 import { ChainlitContext } from './context';
 import type { IToken } from './useChatData';
 import { configState } from './state';
+import { batcherManager } from './utils/tokenBatcher';
 
 const useChatSession = () => {
   const client = useContext(ChainlitContext);
   const sessionId = useRecoilValue(sessionIdState);
   const config = useRecoilValue(configState);
+  const configRef = useRef(config);
+
+  // Keep configRef updated with latest config
+  useEffect(() => {
+    configRef.current = config;
+  }, [config]);
 
   const [session, setSession] = useRecoilState(sessionState);
   
@@ -377,6 +384,11 @@ const useChatSession = () => {
       );
 
       socket.on('update_message', (message: IStep) => {
+        // Clean up any batchers when stream ends (safe no-op if no batcher exists)
+        if (!message.streaming) {
+          batcherManager.completeStream(String(message.id));
+        }
+        
         setMessages((oldMessages) =>
           updateMessageById(oldMessages, message.id, message)
         );
@@ -448,15 +460,42 @@ const useChatSession = () => {
             }
           }
           
-          setMessages((oldMessages) =>
-            updateMessageContentById(
-              oldMessages,
-              id,
-              token,
-              isSequence,
-              isInput
-            )
-          );
+          // Use token batcher for high-frequency streams to prevent UI freezing
+          const messageIdStr = String(id);
+          const batchingConfig = configRef.current?.features?.token_batching;
+          const isBatchingEnabled = batchingConfig?.enabled !== false;
+          
+          if (isBatchingEnabled) {
+            // Use token batching
+            const batcherConfig = {
+              batchWindow: batchingConfig?.batch_window || 100
+            };
+            
+            const batcher = batcherManager.getBatcher(messageIdStr, (content: string) => {
+              setMessages((oldMessages) =>
+                updateMessageContentById(
+                  oldMessages,
+                  id,
+                  content,
+                  isSequence,
+                  isInput
+                )
+              );
+            }, batcherConfig);
+            
+            batcher.addToken(token);
+          } else {
+            // Original direct update path when batching is disabled
+            setMessages((oldMessages) =>
+              updateMessageContentById(
+                oldMessages,
+                id,
+                token,
+                isSequence,
+                isInput
+              )
+            );
+          }
           
           // Performance monitoring
           const updateTime = performance.now() - startTime;

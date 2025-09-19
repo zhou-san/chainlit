@@ -80,6 +80,10 @@ export interface IChainlitConfig {
         enabled?: boolean;
       };
     };
+    token_batching?: {
+      enabled?: boolean;
+      batch_window?: number;  // Time window for collecting tokens (ms)
+    };
   };
   debugUrl?: string;
   userEnv: string[];

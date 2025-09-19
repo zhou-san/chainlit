@@ -156,6 +156,12 @@ reaction_on_message_received = false
     # Please don't comment this line for now, we need it to parse the executable name.
     allowed_executables = [ "npx", "uvx" ]
 
+[features.token_batching]
+    # Enable token batching for high-frequency streams to prevent UI freezing
+    enabled = true
+    # Time window for collecting tokens (ms)
+    batch_window = 500
+
 [UI]
 # Name of the assistant.
 name = "Assistant"
@@ -290,6 +296,11 @@ class SlackFeature(BaseModel):
     reaction_on_message_received: bool = False
 
 
+class TokenBatchingFeature(BaseModel):
+    enabled: bool = True
+    batch_window: int = 100  # Time window for collecting tokens (ms)
+
+
 class McpFeature(BaseModel):
     enabled: bool = False
     show_indicator: bool = True  # Add option to toggle MCP indicator visibility
@@ -305,6 +316,7 @@ class FeaturesSettings(BaseModel):
     audio: Optional[AudioFeature] = Field(default_factory=AudioFeature)
     mcp: McpFeature = Field(default_factory=McpFeature)
     slack: SlackFeature = Field(default_factory=SlackFeature)
+    token_batching: TokenBatchingFeature = Field(default_factory=TokenBatchingFeature)
     latex: bool = False
     user_message_autoscroll: bool = True
     unsafe_allow_html: bool = False
